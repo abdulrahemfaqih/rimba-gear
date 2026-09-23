@@ -13,6 +13,8 @@ function SuksesContent() {
   const waUrl = searchParams.get("waUrl") || "";
   const total = Number(searchParams.get("total") || 0);
   const count = Number(searchParams.get("count") || 1);
+  const dp = Number(searchParams.get("dp") || 0);
+  const remaining = Number(searchParams.get("remaining") || 0);
 
   // Auto redirect to WA after 2 seconds if waUrl is present
   useEffect(() => {
@@ -48,12 +50,24 @@ function SuksesContent() {
             <span className="text-[#6B6B5F]">Jumlah Alat Disewa</span>
             <span className="font-semibold text-[#1E1E1A]">{count} unit alat</span>
           </div>
-          <div className="flex justify-between pt-2 border-t border-[#E4E1D6] font-bold">
-            <span className="text-[#1E1E1A]">Total Biaya</span>
-            <span className="text-[#C1502E] text-sm">
+          <div className="flex justify-between pt-2 border-t border-[#E4E1D6]">
+            <span className="text-[#6B6B5F]">Total Biaya</span>
+            <span className="font-semibold text-[#1E1E1A]">
               Rp{total.toLocaleString("id-ID")}
             </span>
           </div>
+          {dp > 0 && (
+            <>
+              <div className="flex justify-between text-[#C1502E] font-bold">
+                <span>Uang Muka (DP)</span>
+                <span>Rp{dp.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between text-[#6B6B5F]">
+                <span>Sisa Pelunasan</span>
+                <span>Rp{remaining.toLocaleString("id-ID")}</span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Manual WA Button */}

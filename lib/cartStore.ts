@@ -14,16 +14,23 @@ export interface CartItem {
   selectedDays: number;
   selectedPrice: number;
   quantity: number;
+  startDate?: string;
+  endDate?: string;
   availableTiers: PricingTier[];
 }
 
-export type AddCartItemInput = Omit<CartItem, "quantity"> & { quantity?: number };
+export type AddCartItemInput = Omit<CartItem, "quantity"> & {
+  quantity?: number;
+  startDate?: string;
+  endDate?: string;
+};
 
 interface CartStore {
   items: CartItem[];
   addItem: (item: AddCartItemInput) => void;
   updateItemQuantity: (productId: string, quantity: number) => void;
   updateItemDuration: (productId: string, days: number) => void;
+  updateItemDates: (productId: string, startDate: string, endDate: string) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
   getTotalPrice: () => number;
@@ -49,6 +56,8 @@ export const useCartStore = create<CartStore>()(
               quantity: (existing.quantity || 1) + addQty,
               selectedDays: newItem.selectedDays,
               selectedPrice: newItem.selectedPrice,
+              startDate: newItem.startDate || existing.startDate,
+              endDate: newItem.endDate || existing.endDate,
             };
             return { items: updated };
           }
@@ -60,6 +69,13 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({
           items: state.items.map((item) =>
             item.productId === productId ? { ...item, quantity } : item
+          ),
+        }));
+      },
+      updateItemDates: (productId, startDate, endDate) => {
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.productId === productId ? { ...item, startDate, endDate } : item
           ),
         }));
       },

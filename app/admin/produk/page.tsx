@@ -30,6 +30,7 @@ interface Product {
   categorySlug: string;
   description: string;
   images: string[];
+  stock: number;
   isActive: boolean;
   minPrice: number;
   pricingTiers: PricingTier[];
@@ -55,6 +56,7 @@ export default function AdminProdukPage() {
   const [formCategoryId, setFormCategoryId] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formImages, setFormImages] = useState<string[]>([]);
+  const [formStock, setFormStock] = useState(5);
   const [formIsActive, setFormIsActive] = useState(true);
   const [formTiers, setFormTiers] = useState<PricingTier[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -181,6 +183,7 @@ export default function AdminProdukPage() {
     setFormImages([
       "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80",
     ]);
+    setFormStock(5);
     setFormIsActive(true);
     setFormTiers([
       { days: 2, price: 38000 },
@@ -200,6 +203,7 @@ export default function AdminProdukPage() {
     setFormCategoryId(prod.categoryId);
     setFormDescription(prod.description);
     setFormImages(prod.images && prod.images.length > 0 ? [...prod.images] : []);
+    setFormStock(prod.stock ?? 5);
     setFormIsActive(prod.isActive);
     setFormTiers(
       prod.pricingTiers && prod.pricingTiers.length > 0
@@ -285,6 +289,7 @@ export default function AdminProdukPage() {
         categoryId: formCategoryId,
         description: formDescription.trim(),
         images,
+        stock: Number(formStock ?? 5),
         pricingTiers: formTiers.map((t) => ({
           days: Number(t.days),
           price: Number(t.price),
@@ -367,6 +372,7 @@ export default function AdminProdukPage() {
                   <th className="py-3 px-5">Foto</th>
                   <th className="py-3 px-5">Nama Produk</th>
                   <th className="py-3 px-5">Kategori</th>
+                  <th className="py-3 px-5 text-center">Stok Unit</th>
                   <th className="py-3 px-5">Harga Mulai Dari</th>
                   <th className="py-3 px-5 text-center">Tier Durasi</th>
                   <th className="py-3 px-5 text-center">Status</th>
@@ -410,6 +416,11 @@ export default function AdminProdukPage() {
                         <td className="py-3 px-5">
                           <span className="bg-[#F7F5EF] px-2 py-0.5 rounded border border-[#E4E1D6] font-medium text-[11px] text-[#2F3D2A]">
                             {prod.categoryName}
+                          </span>
+                        </td>
+                        <td className="py-3 px-5 text-center font-bold text-[#1E1E1A]">
+                          <span className="bg-[#F7F5EF] px-2 py-0.5 rounded border border-[#E4E1D6]">
+                            {prod.stock ?? 5} unit
                           </span>
                         </td>
                         <td className="py-3 px-5 font-bold text-[#C1502E]">
@@ -498,7 +509,7 @@ export default function AdminProdukPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs uppercase font-bold tracking-wider text-[#1E1E1A] mb-1">
                       Kategori
@@ -518,6 +529,21 @@ export default function AdminProdukPage() {
 
                   <div>
                     <label className="block text-xs uppercase font-bold tracking-wider text-[#1E1E1A] mb-1">
+                      Stok Fisik Unit
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      required
+                      value={formStock}
+                      onChange={(e) => setFormStock(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="input-hairline w-full text-xs bg-white font-medium"
+                      placeholder="5"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase font-bold tracking-wider text-[#1E1E1A] mb-1">
                       Status Tampil
                     </label>
                     <select
@@ -525,7 +551,7 @@ export default function AdminProdukPage() {
                       onChange={(e) => setFormIsActive(e.target.value === "1")}
                       className="input-hairline w-full text-xs bg-white"
                     >
-                      <option value="1">Aktif (Tampil di Website)</option>
+                      <option value="1">Aktif (Tampil)</option>
                       <option value="0">Nonaktif</option>
                     </select>
                   </div>

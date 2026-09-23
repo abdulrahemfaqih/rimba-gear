@@ -15,6 +15,7 @@ import {
   AlertCircle,
   FileImage,
   Send,
+  Calendar,
 } from "lucide-react";
 
 export default function CheckoutPage() {
@@ -34,11 +35,20 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [dpPercentage, setDpPercentage] = useState(30);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.dpPercentage === "number") {
+          setDpPercentage(data.dpPercentage);
+        }
+      })
+      .catch((err) => console.error(err));
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,12 +106,21 @@ export default function CheckoutPage() {
       // 2. Save order to database
       const totalPrice = getTotalPrice();
       const totalUnits = getTotalItems();
+      const orderStartDate = items[0]?.startDate || "";
+      const orderEndDate = items[0]?.endDate || "";
+      const dpAmount = Math.round((totalPrice * dpPercentage) / 100);
+      const remainingAmount = totalPrice - dpAmount;
+
       const orderPayload = {
         customerName: customerName.trim(),
         phone: phone.trim(),
         address: address.trim() || undefined,
         idPhotoUrl,
         totalPrice,
+        startDate: orderStartDate || undefined,
+        endDate: orderEndDate || undefined,
+        dpPercentage,
+        dpAmount,
         items: items.map((item) => ({
           productId: item.productId,
           productName: item.name,
@@ -135,21 +154,28 @@ export default function CheckoutPage() {
         })
         .join("\n");
 
+      const dateText = orderStartDate
+        ? `*Tanggal Sewa:* ${orderStartDate} s/d ${orderEndDate}%0A`
+        : "";
+
       const waMessage = `Halo Admin Your Brand, saya ingin konfirmasi sewa alat outdoor:%0A%0A` +
         `*ID Pesanan:* ${orderId}%0A` +
         `*Nama Penyewa:* ${customerName}%0A` +
         `*No. WhatsApp:* ${phone}%0A` +
         (address ? `*Alamat:* ${address}%0A` : "") +
+        dateText +
         `%0A*Daftar Alat Disewa:*%0A${encodeURIComponent(itemListText)}%0A%0A` +
         `*Total Biaya:* Rp${totalPrice.toLocaleString("id-ID")}%0A` +
+        `*Uang Muka (DP ${dpPercentage}%):* Rp${dpAmount.toLocaleString("id-ID")}%0A` +
+        `*Sisa Pelunasan:* Rp${remainingAmount.toLocaleString("id-ID")} (saat serah terima alat)%0A` +
         `*Foto Identitas:* Sudah diunggah ke sistem.%0A%0A` +
-        `Mohon konfirmasi ketersediaan alat dan proses pengambilannya. Terima kasih!`;
+        `Mohon konfirmasi ketersediaan alat dan instruksi pembayaran DP. Terima kasih!`;
 
       const waUrl = `https://wa.me/${adminPhone}?text=${waMessage}`;
 
       // 4. Clear cart & redirect
       clearCart();
-      router.push(`/checkout/sukses?orderId=${orderId}&waUrl=${encodeURIComponent(waUrl)}&total=${totalPrice}&count=${totalUnits}`);
+      router.push(`/checkout/sukses?orderId=${orderId}&waUrl=${encodeURIComponent(waUrl)}&total=${totalPrice}&count=${totalUnits}&dp=${dpAmount}&remaining=${remainingAmount}`);
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Terjadi kesalahan saat memproses pesanan.");
@@ -382,11 +408,50 @@ export default function CheckoutPage() {
                 })}
               </div>
 
-              {/* Total Price */}
-              <div className="pt-4 border-t border-[#E4E1D6] flex justify-between items-baseline">
-                <span className="font-bold text-base text-[#1E1E1A]">Total Biaya Sewa</span>
-                <span className="font-heading font-extrabold text-2xl text-[#C1502E]">
-                  Rp{totalPrice.toLocaleString("id-ID")}
+              {/* Rental Dates Summary */}
+              {items[0]?.startDate && (
+                <div className="p-3 bg-[#F7F5EF] border border-[#E4E1D6] rounded-[6px] text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 font-semibold text-[#2F3D2A]">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Periode Sewa</span>
+                  </div>
+                  <div className="text-[#1E1E1A] font-medium">
+                    {items[0].startDate} s/d {items[0].endDate || "-"}
+                  </div>
+                </div>
+              )}
+
+              {/* Total Price & DP Breakdown */}
+              <div className="pt-4 border-t border-[#E4E1D6] space-y-2.5">
+                <div className="flex justify-between items-baseline text-sm text-[#6B6B5F]">
+                  <span>Total Biaya Sewa</span>
+                  <span className="font-bold text-base text-[#1E1E1A]">
+                    Rp{totalPrice.toLocaleString("id-ID")}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-baseline p-2.5 bg-[#C1502E]/10 rounded-[6px] border border-[#C1502E]/20">
+                  <div>
+                    <span className="font-bold text-sm text-[#C1502E] block">
+                      Uang Muka (DP {dpPercentage}%)
+                    </span>
+                    <span className="text-[10px] text-[#6B6B5F]">
+                      Wajib ditransfer setelah dikonfirmasi admin
+                    </span>
+                  </div>
+                  <span className="font-heading font-extrabold text-lg text-[#C1502E]">
+                    Rp{Math.round((totalPrice * dpPercentage) / 100).toLocaleString("id-ID")}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-baseline text-xs text-[#6B6B5F] pt-1">
+                  <span>Sisa Pelunasan ({100 - dpPercentage}%)</span>
+                  <span className="font-semibold text-[#1E1E1A]">
+                    Rp{(totalPrice - Math.round((totalPrice * dpPercentage) / 100)).toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#6B6B5F] block italic text-right">
+                  *Sisa dibayar tunai/transfer saat serah terima alat
                 </span>
               </div>
 

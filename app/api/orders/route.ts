@@ -46,7 +46,11 @@ export async function GET(req: NextRequest) {
       address: row.address ? String(row.address) : null,
       idPhotoUrl: String(row.id_photo_url),
       totalPrice: Number(row.total_price),
-      status: String(row.status),
+      startDate: row.start_date ? String(row.start_date) : null,
+      endDate: row.end_date ? String(row.end_date) : null,
+      dpPercentage: Number(row.dp_percentage ?? 30),
+      dpAmount: Number(row.dp_amount ?? 0),
+      status: String(row.status === "baru" ? "pending" : row.status),
       createdAt: String(row.created_at),
       items: itemsByOrderId[String(row.id)] || [],
     }));
@@ -63,7 +67,18 @@ export async function POST(req: NextRequest) {
     await initDb();
     const db = getDb();
     const body = await req.json();
-    const { customerName, phone, address, idPhotoUrl, totalPrice, items } = body;
+    const {
+      customerName,
+      phone,
+      address,
+      idPhotoUrl,
+      totalPrice,
+      startDate,
+      endDate,
+      dpPercentage = 30,
+      dpAmount = 0,
+      items,
+    } = body;
 
     if (!customerName || !phone || !idPhotoUrl || !items || !items.length) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -76,9 +91,21 @@ export async function POST(req: NextRequest) {
     const createdAt = now.toISOString();
 
     await db.execute({
-      sql: `INSERT INTO orders (id, customer_name, phone, address, id_photo_url, total_price, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, 'baru', ?)`,
-      args: [orderId, customerName, phone, address || null, idPhotoUrl, totalPrice, createdAt],
+      sql: `INSERT INTO orders (id, customer_name, phone, address, id_photo_url, total_price, start_date, end_date, dp_percentage, dp_amount, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      args: [
+        orderId,
+        customerName,
+        phone,
+        address || null,
+        idPhotoUrl,
+        totalPrice,
+        startDate || null,
+        endDate || null,
+        Number(dpPercentage),
+        Number(dpAmount),
+        createdAt,
+      ],
     });
 
     for (let i = 0; i < items.length; i++) {

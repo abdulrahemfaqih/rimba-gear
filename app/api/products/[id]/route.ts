@@ -58,6 +58,7 @@ export async function GET(
       slug: String(row.slug),
       description: String(row.description),
       images,
+      stock: Number(row.stock ?? 5),
       isActive: Boolean(row.is_active),
       pricingTiers,
       minPrice,
@@ -79,7 +80,7 @@ export async function PUT(
     const { id } = await params;
     const db = getDb();
     const body = await req.json();
-    const { name, categoryId, description, images, pricingTiers, isActive } = body;
+    const { name, categoryId, description, images, pricingTiers, isActive, stock } = body;
 
     const slug = name
       ? name
@@ -96,6 +97,7 @@ export async function PUT(
                 category_id = COALESCE(?, category_id),
                 description = COALESCE(?, description),
                 images = COALESCE(?, images),
+                stock = COALESCE(?, stock),
                 is_active = COALESCE(?, is_active)
             WHERE id = ?`,
       args: [
@@ -104,6 +106,7 @@ export async function PUT(
         categoryId ?? null,
         description ?? null,
         images ? JSON.stringify(images) : null,
+        stock !== undefined ? Number(stock) : null,
         isActive !== undefined ? (isActive ? 1 : 0) : null,
         id,
       ],

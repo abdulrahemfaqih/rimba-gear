@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ShoppingBag, ArrowLeft, ShieldCheck, Clock, RefreshCw, Plus, Minus } from "lucide-react";
+import { Check, ShoppingBag, ArrowLeft, ShieldCheck, Clock, RefreshCw, Plus, Minus, Calendar } from "lucide-react";
 import { useCartStore } from "@/lib/cartStore";
 
 interface PricingTier {
@@ -33,9 +33,60 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
 
+  // Rental date states
+  const getTomorrowString = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const calculateEndDate = (start: string, days: number) => {
+    if (!start) return "";
+    const d = new Date(start);
+    d.setDate(d.getDate() + (days - 1));
+    return d.toISOString().slice(0, 10);
+  };
+
+  const [startDate, setStartDate] = useState(getTomorrowString());
+  const endDate = calculateEndDate(startDate, selectedTier.days);
+
+  const [availability, setAvailability] = useState<{
+    totalStock: number;
+    availableStock: number;
+    maxBooked: number;
+  } | null>(null);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+
+  useEffect(() => {
+    if (!startDate || !endDate) return;
+    let isCancelled = false;
+    setLoadingAvailability(true);
+    fetch(`/api/products/${product.id}/availability?startDate=${startDate}&endDate=${endDate}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!isCancelled) {
+          setAvailability(data);
+          setLoadingAvailability(false);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        if (!isCancelled) setLoadingAvailability(false);
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [product.id, startDate, endDate]);
+
+  const availableStock = availability ? availability.availableStock : 5;
+  const isOutOfStock = availability !== null && availableStock === 0;
+  const isStockInsufficient = availability !== null && availableStock < quantity;
+
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = () => {
+    if (isOutOfStock || isStockInsufficient) return;
+
     addItem({
       productId: product.id,
       name: product.name,
@@ -44,6 +95,8 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
       selectedDays: selectedTier.days,
       selectedPrice: selectedTier.price,
       quantity,
+      startDate,
+      endDate,
       availableTiers: product.pricingTiers,
     });
 
@@ -177,6 +230,67 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
             </span>
           </div>
 
+          {/* Rental Date Selection */}
+          <div className="py-5 border-b border-[#E4E1D6] space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs uppercase font-bold tracking-wider text-[#1E1E1A] flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#2F3D2A]" />
+                <span>Pilih Tanggal Mulai Sewa</span>
+              </label>
+              {loadingAvailability ? (
+                <span className="text-[11px] text-[#6B6B5F] animate-pulse">Memeriksa ketersediaan...</span>
+              ) : availability ? (
+                isOutOfStock ? (
+                  <span className="text-[11px] font-semibold text-[#B3261E] bg-[#B3261E]/10 px-2 py-0.5 rounded">
+                    Stok Habis di Tanggal Ini
+                  </span>
+                ) : isStockInsufficient ? (
+                  <span className="text-[11px] font-semibold text-[#C1502E] bg-[#C1502E]/10 px-2 py-0.5 rounded">
+                    Sisa {availableStock} unit (kurang {quantity - availableStock})
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-semibold text-[#3F7D45] bg-[#3F7D45]/10 px-2 py-0.5 rounded">
+                    Stok Tersedia: {availableStock} unit
+                  </span>
+                )
+              ) : null}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] text-[#6B6B5F] mb-1">
+                  Mulai Pengambilan Alat:
+                </label>
+                <input
+                  type="date"
+                  min={new Date().toISOString().slice(0, 10)}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="input-hairline w-full py-2 px-3 text-xs bg-white font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-[#6B6B5F] mb-1">
+                  Estimasi Pengembalian:
+                </label>
+                <div className="py-2 px-3 text-xs bg-[#F7F5EF] border border-[#E4E1D6] rounded-[6px] font-medium text-[#1E1E1A]">
+                  {endDate
+                    ? new Date(endDate).toLocaleDateString("id-ID", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "-"}
+                </div>
+              </div>
+            </div>
+            <span className="text-[11px] text-[#6B6B5F] block">
+              *Durasi otomatis disesuaikan dengan paket {selectedTier.days} hari kalender yang dipilih.
+            </span>
+          </div>
+
           {/* Quantity Selection */}
           <div className="py-5 border-b border-[#E4E1D6] flex items-center justify-between">
             <div>
@@ -234,9 +348,14 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="btn-primary flex-1 py-3.5 text-base flex items-center justify-center gap-2"
+                disabled={isOutOfStock || isStockInsufficient}
+                className="btn-primary flex-1 py-3.5 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isAdded ? (
+                {isOutOfStock ? (
+                  <span>Stok Habis di Tanggal Ini</span>
+                ) : isStockInsufficient ? (
+                  <span>Stok Kurang (Sisa {availableStock})</span>
+                ) : isAdded ? (
                   <>
                     <Check className="w-5 h-5 text-white" />
                     <span>Berhasil Masuk Keranjang!</span>

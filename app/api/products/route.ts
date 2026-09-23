@@ -80,6 +80,7 @@ export async function GET(req: NextRequest) {
         slug: String(row.slug),
         description: String(row.description),
         images,
+        stock: Number(row.stock ?? 5),
         isActive: Boolean(row.is_active),
         pricingTiers: tiers,
         minPrice,
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
     await initDb();
     const db = getDb();
     const body = await req.json();
-    const { name, categoryId, description, images = [], pricingTiers = [], isActive = 1 } = body;
+    const { name, categoryId, description, images = [], pricingTiers = [], isActive = 1, stock = 5 } = body;
 
     if (!name || !categoryId || !description) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -113,8 +114,8 @@ export async function POST(req: NextRequest) {
     const id = "prod-" + Date.now();
 
     await db.execute({
-      sql: `INSERT INTO products (id, category_id, name, slug, description, images, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO products (id, category_id, name, slug, description, images, stock, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id,
         categoryId,
@@ -122,6 +123,7 @@ export async function POST(req: NextRequest) {
         slug,
         description,
         JSON.stringify(images),
+        Number(stock ?? 5),
         isActive ? 1 : 0,
       ],
     });

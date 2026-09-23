@@ -249,9 +249,9 @@ export async function seedData(db: Client): Promise<void> {
 
   for (const prod of products) {
     await db.execute({
-      sql: `INSERT OR REPLACE INTO products (id, category_id, name, slug, description, images, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      args: [prod.id, prod.category_id, prod.name, prod.slug, prod.description, prod.images, prod.is_active],
+      sql: `INSERT OR REPLACE INTO products (id, category_id, name, slug, description, images, is_active, stock)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [prod.id, prod.category_id, prod.name, prod.slug, prod.description, prod.images, prod.is_active, 5],
     });
 
     for (let i = 0; i < prod.tiers.length; i++) {
@@ -267,9 +267,15 @@ export async function seedData(db: Client): Promise<void> {
 
   // Sample order for demo/admin
   const sampleOrderId = "ORD-2026-001";
+  const now = new Date();
+  const startDateStr = now.toISOString().split("T")[0];
+  const endDateObj = new Date(now);
+  endDateObj.setDate(endDateObj.getDate() + 3);
+  const endDateStr = endDateObj.toISOString().split("T")[0];
+
   await db.execute({
-    sql: `INSERT OR REPLACE INTO orders (id, customer_name, phone, address, id_photo_url, total_price, status, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT OR REPLACE INTO orders (id, customer_name, phone, address, id_photo_url, total_price, start_date, end_date, dp_percentage, dp_amount, status, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       sampleOrderId,
       "Dimas Prasetyo",
@@ -277,21 +283,25 @@ export async function seedData(db: Client): Promise<void> {
       "Jl. Rinjani No. 14, Jakarta Selatan",
       "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80",
       92000,
-      "baru",
+      startDateStr,
+      endDateStr,
+      30,
+      27600,
+      "dikonfirmasi",
       new Date().toISOString(),
     ],
   });
 
   await db.execute({
-    sql: `INSERT OR REPLACE INTO order_items (id, order_id, product_id, product_name, days, price)
-          VALUES (?, ?, ?, ?, ?, ?)`,
-    args: ["item-1", sampleOrderId, "prod-1", "Bivak Set", 3, 52000],
+    sql: `INSERT OR REPLACE INTO order_items (id, order_id, product_id, product_name, days, price, quantity)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: ["item-1", sampleOrderId, "prod-1", "Bivak Set", 3, 52000, 1],
   });
 
   await db.execute({
-    sql: `INSERT OR REPLACE INTO order_items (id, order_id, product_id, product_name, days, price)
-          VALUES (?, ?, ?, ?, ?, ?)`,
-    args: ["item-2", sampleOrderId, "prod-2", "Tenda Dome 4 Orang", 2, 40000],
+    sql: `INSERT OR REPLACE INTO order_items (id, order_id, product_id, product_name, days, price, quantity)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: ["item-2", sampleOrderId, "prod-2", "Tenda Dome 4 Orang", 2, 40000, 1],
   });
 
   // Seed default admin

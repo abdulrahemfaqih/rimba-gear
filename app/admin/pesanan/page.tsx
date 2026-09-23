@@ -31,7 +31,11 @@ interface Order {
   address: string | null;
   idPhotoUrl: string;
   totalPrice: number;
-  status: "baru" | "dikonfirmasi" | "selesai" | "dibatalkan";
+  startDate?: string | null;
+  endDate?: string | null;
+  dpPercentage?: number;
+  dpAmount?: number;
+  status: "pending" | "dikonfirmasi" | "bayar_dp" | "ambil_barang" | "selesai" | "dibatalkan" | "baru";
   createdAt: string;
   items: OrderItem[];
 }
@@ -116,16 +120,41 @@ function AdminPesananContent() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case "pending":
       case "baru":
-        return "bg-[#C1502E]/10 text-[#C1502E] border border-[#C1502E]/30";
+        return "bg-amber-100 text-amber-800 border-amber-300";
       case "dikonfirmasi":
-        return "bg-[#2F3D2A]/10 text-[#2F3D2A] border border-[#2F3D2A]/30";
+        return "bg-blue-100 text-blue-800 border-blue-300";
+      case "bayar_dp":
+        return "bg-purple-100 text-purple-800 border-purple-300";
+      case "ambil_barang":
+        return "bg-teal-100 text-teal-800 border-teal-300";
       case "selesai":
-        return "bg-[#3F7D45]/10 text-[#3F7D45] border border-[#3F7D45]/30";
+        return "bg-emerald-100 text-emerald-800 border-emerald-300";
       case "dibatalkan":
-        return "bg-[#B3261E]/10 text-[#B3261E] border border-[#B3261E]/30";
+        return "bg-rose-100 text-rose-800 border-rose-300";
       default:
-        return "bg-gray-100 text-gray-700 border border-gray-300";
+        return "bg-gray-100 text-gray-700 border-gray-300";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "pending":
+      case "baru":
+        return "Pending";
+      case "dikonfirmasi":
+        return "Dikonfirmasi";
+      case "bayar_dp":
+        return "Bayar DP";
+      case "ambil_barang":
+        return "Sudah Ambil";
+      case "selesai":
+        return "Selesai";
+      case "dibatalkan":
+        return "Dibatalkan";
+      default:
+        return status;
     }
   };
 
@@ -170,17 +199,25 @@ function AdminPesananContent() {
 
         {/* Filter Status Tabs */}
         <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
-          {["semua", "baru", "dikonfirmasi", "selesai", "dibatalkan"].map((st) => (
+          {[
+            { id: "semua", label: "Semua Status" },
+            { id: "pending", label: "Pending" },
+            { id: "dikonfirmasi", label: "Dikonfirmasi" },
+            { id: "bayar_dp", label: "Bayar DP" },
+            { id: "ambil_barang", label: "Sudah Ambil" },
+            { id: "selesai", label: "Selesai" },
+            { id: "dibatalkan", label: "Dibatalkan" },
+          ].map((st) => (
             <button
-              key={st}
-              onClick={() => setSelectedStatus(st)}
+              key={st.id}
+              onClick={() => setSelectedStatus(st.id)}
               className={`px-3.5 py-1.5 rounded-[4px] text-xs font-semibold uppercase tracking-wider transition-colors shrink-0 ${
-                selectedStatus === st
+                selectedStatus === st.id
                   ? "bg-[#2F3D2A] text-white"
                   : "bg-white text-[#6B6B5F] border border-[#E4E1D6] hover:bg-[#F7F5EF] hover:text-[#1E1E1A]"
               }`}
             >
-              {st}
+              {st.label}
             </button>
           ))}
         </div>
@@ -193,7 +230,7 @@ function AdminPesananContent() {
                 <tr>
                   <th className="py-3 px-5">ID Pesanan</th>
                   <th className="py-3 px-5">Nama Penyewa</th>
-                  <th className="py-3 px-5">No. WhatsApp</th>
+                  <th className="py-3 px-5">Periode Sewa</th>
                   <th className="py-3 px-5">Total Biaya</th>
                   <th className="py-3 px-5 text-center">Item</th>
                   <th className="py-3 px-5 text-center">Status</th>
@@ -215,53 +252,61 @@ function AdminPesananContent() {
                     </td>
                   </tr>
                 ) : (
-                  filteredOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-[#F7F5EF]/50 transition-colors">
-                      <td className="py-3.5 px-5 font-mono font-medium text-[#2F3D2A]">
-                        {order.id}
-                      </td>
-                      <td className="py-3.5 px-5 font-bold text-sm">
-                        {order.customerName}
-                      </td>
-                      <td className="py-3.5 px-5 text-[#6B6B5F]">
-                        {order.phone}
-                      </td>
-                      <td className="py-3.5 px-5 font-bold text-[#C1502E]">
-                        Rp{order.totalPrice.toLocaleString("id-ID")}
-                      </td>
-                      <td className="py-3.5 px-5 text-center">
-                        <span className="bg-[#F7F5EF] px-2 py-0.5 rounded border border-[#E4E1D6]">
-                          {order.items.reduce((s, it) => s + (it.quantity || 1), 0)} unit
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-5 text-center">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider ${getStatusBadge(
-                            order.status
-                          )}`}
-                        >
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-5 text-[#6B6B5F]">
-                        {new Date(order.createdAt).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                      <td className="py-3.5 px-5 text-right">
-                        <button
-                          onClick={() => openDetailModal(order)}
-                          className="btn-secondary text-[11px] py-1 px-3"
-                        >
-                          Detail
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  filteredOrders.map((order) => {
+                    const statusStr = String(order.status === "baru" ? "pending" : order.status);
+                    return (
+                      <tr key={order.id} className="hover:bg-[#F7F5EF]/50 transition-colors">
+                        <td className="py-3.5 px-5 font-mono font-medium text-[#2F3D2A]">
+                          {order.id}
+                        </td>
+                        <td className="py-3.5 px-5">
+                          <div className="font-bold text-sm text-[#1E1E1A]">{order.customerName}</div>
+                          <span className="text-[11px] text-[#6B6B5F]">{order.phone}</span>
+                        </td>
+                        <td className="py-3.5 px-5 text-xs text-[#6B6B5F]">
+                          {order.startDate ? (
+                            <span>{order.startDate} s/d {order.endDate || "-"}</span>
+                          ) : (
+                            <span>-</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-5 font-bold text-[#C1502E]">
+                          Rp{order.totalPrice.toLocaleString("id-ID")}
+                        </td>
+                        <td className="py-3.5 px-5 text-center">
+                          <span className="bg-[#F7F5EF] px-2 py-0.5 rounded border border-[#E4E1D6]">
+                            {order.items.reduce((s, it) => s + (it.quantity || 1), 0)} unit
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-5 text-center">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider ${getStatusBadge(
+                              statusStr
+                            )}`}
+                          >
+                            {getStatusLabel(statusStr)}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-5 text-[#6B6B5F]">
+                          {new Date(order.createdAt).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                        <td className="py-3.5 px-5 text-right">
+                          <button
+                            onClick={() => openDetailModal(order)}
+                            className="btn-secondary text-[11px] py-1 px-3"
+                          >
+                            Detail
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -328,6 +373,17 @@ function AdminPesananContent() {
                       </span>
                       <span className="text-xs text-[#1E1E1A]">
                         {selectedOrder.address}
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedOrder.startDate && (
+                    <div className="md:col-span-2 pt-2 border-t border-[#E4E1D6]">
+                      <span className="text-[11px] uppercase tracking-wider text-[#6B6B5F] block font-medium">
+                        Periode Sewa
+                      </span>
+                      <span className="text-xs font-semibold text-[#1E1E1A]">
+                        {selectedOrder.startDate} s/d {selectedOrder.endDate || "-"}
                       </span>
                     </div>
                   )}
@@ -400,15 +456,35 @@ function AdminPesananContent() {
                           );
                         })}
                       </tbody>
-                      <tfoot className="bg-[#F7F5EF] border-t border-[#E4E1D6] font-bold">
+                      <tfoot className="bg-[#F7F5EF] border-t border-[#E4E1D6]">
                         <tr>
-                          <td colSpan={4} className="py-2.5 px-4 text-[#1E1E1A]">
+                          <td colSpan={4} className="py-2.5 px-4 font-bold text-[#1E1E1A]">
                             Total Keseluruhan
                           </td>
-                          <td className="py-2.5 px-4 text-right text-sm text-[#C1502E]">
+                          <td className="py-2.5 px-4 text-right text-sm font-bold text-[#C1502E]">
                             Rp{selectedOrder.totalPrice.toLocaleString("id-ID")}
                           </td>
                         </tr>
+                        {selectedOrder.dpAmount && selectedOrder.dpAmount > 0 ? (
+                          <>
+                            <tr className="text-[#2F3D2A] bg-amber-50/50">
+                              <td colSpan={4} className="py-1.5 px-4 font-semibold">
+                                Uang Muka (DP {selectedOrder.dpPercentage || 30}%)
+                              </td>
+                              <td className="py-1.5 px-4 text-right font-bold">
+                                Rp{selectedOrder.dpAmount.toLocaleString("id-ID")}
+                              </td>
+                            </tr>
+                            <tr className="text-[#6B6B5F]">
+                              <td colSpan={4} className="py-1.5 px-4">
+                                Sisa Pelunasan (saat ambil alat)
+                              </td>
+                              <td className="py-1.5 px-4 text-right font-semibold">
+                                Rp{(selectedOrder.totalPrice - selectedOrder.dpAmount).toLocaleString("id-ID")}
+                              </td>
+                            </tr>
+                          </>
+                        ) : null}
                       </tfoot>
                     </table>
                   </div>
@@ -421,12 +497,14 @@ function AdminPesananContent() {
                       Ubah Status:
                     </label>
                     <select
-                      value={newStatus}
+                      value={newStatus === "baru" ? "pending" : newStatus}
                       onChange={(e) => setNewStatus(e.target.value)}
                       className="input-hairline py-1.5 px-3 text-xs bg-white font-medium"
                     >
-                      <option value="baru">Baru</option>
-                      <option value="dikonfirmasi">Dikonfirmasi</option>
+                      <option value="pending">Pending</option>
+                      <option value="dikonfirmasi">Dikonfirmasi (Kunci Stok)</option>
+                      <option value="bayar_dp">Bayar DP</option>
+                      <option value="ambil_barang">Sudah Ambil Barang</option>
                       <option value="selesai">Selesai</option>
                       <option value="dibatalkan">Dibatalkan</option>
                     </select>

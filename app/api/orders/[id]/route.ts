@@ -12,17 +12,27 @@ export async function PATCH(
     const body = await req.json();
     const { status } = body;
 
-    const allowedStatuses = ["baru", "dikonfirmasi", "selesai", "dibatalkan"];
+    const allowedStatuses = [
+      "pending",
+      "dikonfirmasi",
+      "bayar_dp",
+      "ambil_barang",
+      "selesai",
+      "dibatalkan",
+      "baru",
+    ];
     if (!allowedStatuses.includes(status)) {
       return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
     }
 
+    const finalStatus = status === "baru" ? "pending" : status;
+
     await db.execute({
       sql: `UPDATE orders SET status = ? WHERE id = ?`,
-      args: [status, id],
+      args: [finalStatus, id],
     });
 
-    return NextResponse.json({ success: true, status });
+    return NextResponse.json({ success: true, status: finalStatus });
   } catch (error) {
     console.error("Order PATCH error:", error);
     return NextResponse.json({ error: "Failed to update order status" }, { status: 500 });

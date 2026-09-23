@@ -6,7 +6,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCartStore } from "@/lib/cartStore";
-import { Trash2, ArrowRight, ShoppingBag, ShieldCheck, Plus, Minus } from "lucide-react";
+import { Trash2, ArrowRight, ShoppingBag, ShieldCheck, Plus, Minus, Calendar } from "lucide-react";
 
 export default function CartPage() {
   const [mounted, setMounted] = useState(false);
@@ -124,6 +124,14 @@ export default function CartPage() {
                           ))}
                         </select>
                       </div>
+                      {item.startDate && (
+                        <div className="mt-1.5 text-[11px] text-[#6B6B5F] flex items-center gap-1.5">
+                          <Calendar className="w-3 h-3 text-[#2F3D2A]" />
+                          <span>
+                            {item.startDate} {item.endDate ? `s/d ${item.endDate}` : ""}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

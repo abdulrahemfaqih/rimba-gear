@@ -1,14 +1,14 @@
 import Link from "next/link";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import BookingCalendar, { CalendarOrder } from "@/components/admin/BookingCalendar";
+import DpSettingsCard from "@/components/admin/DpSettingsCard";
 import { getDb, initDb } from "@/lib/db";
 import {
   Package,
   Layers,
-  ShoppingBag,
   TrendingUp,
   ArrowRight,
   Clock,
-  CheckCircle,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export default async function AdminDashboardPage() {
   const ordersCountRes = await db.execute(`
     SELECT 
       COUNT(*) as total_orders,
-      SUM(CASE WHEN status = 'baru' THEN 1 ELSE 0 END) as new_orders,
+      SUM(CASE WHEN status = 'pending' OR status = 'baru' THEN 1 ELSE 0 END) as new_orders,
       SUM(total_price) as total_revenue
     FROM orders
   `);
@@ -33,6 +33,46 @@ export default async function AdminDashboardPage() {
   const catCountRes = await db.execute(`
     SELECT COUNT(*) as total_categories FROM categories WHERE is_active = 1
   `);
+
+  // Settings: DP percentage
+  const settingsRes = await db.execute("SELECT * FROM settings WHERE key = 'dp_percentage'");
+  const dpPercentage = parseInt(String(settingsRes.rows[0]?.value || "30"), 10) || 30;
+
+  // Active bookings for calendar
+  const allOrdersRes = await db.execute(`
+    SELECT o.id, o.customer_name, o.phone, o.start_date, o.end_date, o.total_price, o.dp_amount, o.status,
+           oi.product_name, oi.quantity
+    FROM orders o
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    WHERE o.status != 'dibatalkan'
+    ORDER BY o.created_at DESC
+  `);
+
+  const calendarOrdersMap: Record<string, CalendarOrder> = {};
+  for (const row of allOrdersRes.rows) {
+    const oId = String(row.id);
+    if (!calendarOrdersMap[oId]) {
+      calendarOrdersMap[oId] = {
+        id: oId,
+        customerName: String(row.customer_name),
+        phone: String(row.phone),
+        startDate: row.start_date ? String(row.start_date) : "",
+        endDate: row.end_date ? String(row.end_date) : "",
+        totalPrice: Number(row.total_price),
+        dpAmount: Number(row.dp_amount || 0),
+        status: String(row.status === "baru" ? "pending" : row.status),
+        items: [],
+      };
+    }
+    if (row.product_name) {
+      calendarOrdersMap[oId].items.push({
+        productName: String(row.product_name),
+        quantity: Number(row.quantity || 1),
+      });
+    }
+  }
+
+  const calendarOrders = Object.values(calendarOrdersMap);
 
   // Recent 5 orders
   const recentOrdersRes = await db.execute(`
@@ -47,16 +87,41 @@ export default async function AdminDashboardPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case "pending":
       case "baru":
-        return "bg-[#C1502E]/10 text-[#C1502E] border border-[#C1502E]/30";
+        return "bg-amber-100 text-amber-800 border-amber-300";
       case "dikonfirmasi":
-        return "bg-[#2F3D2A]/10 text-[#2F3D2A] border border-[#2F3D2A]/30";
+        return "bg-blue-100 text-blue-800 border-blue-300";
+      case "bayar_dp":
+        return "bg-purple-100 text-purple-800 border-purple-300";
+      case "ambil_barang":
+        return "bg-teal-100 text-teal-800 border-teal-300";
       case "selesai":
-        return "bg-[#3F7D45]/10 text-[#3F7D45] border border-[#3F7D45]/30";
+        return "bg-emerald-100 text-emerald-800 border-emerald-300";
       case "dibatalkan":
-        return "bg-[#B3261E]/10 text-[#B3261E] border border-[#B3261E]/30";
+        return "bg-rose-100 text-rose-800 border-rose-300";
       default:
-        return "bg-gray-100 text-gray-700 border border-gray-300";
+        return "bg-gray-100 text-gray-700 border-gray-300";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "pending":
+      case "baru":
+        return "Pending";
+      case "dikonfirmasi":
+        return "Dikonfirmasi";
+      case "bayar_dp":
+        return "Bayar DP";
+      case "ambil_barang":
+        return "Sudah Ambil";
+      case "selesai":
+        return "Selesai";
+      case "dibatalkan":
+        return "Dibatalkan";
+      default:
+        return status;
     }
   };
 
@@ -64,9 +129,9 @@ export default async function AdminDashboardPage() {
     <div className="flex min-h-screen bg-[#F7F5EF]">
       <AdminSidebar />
 
-      <main className="flex-1 p-6 lg:p-10 overflow-y-auto">
+      <main className="flex-1 p-6 lg:p-10 overflow-y-auto space-y-8">
         {/* Header */}
-        <div className="mb-8 pb-4 border-b border-[#E4E1D6] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="pb-4 border-b border-[#E4E1D6] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1E1E1A] font-heading">
               Dashboard Rental
@@ -88,14 +153,14 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* 4 Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Metric 1 */}
           <div className="card-base p-5 bg-white border border-[#E4E1D6] rounded-[6px]">
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase tracking-wider text-[#6B6B5F] font-semibold">
-                Pesanan Baru
+                Pesanan Pending
               </span>
-              <div className="w-8 h-8 rounded-full bg-[#C1502E]/10 text-[#C1502E] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center">
                 <Clock className="w-4 h-4" />
               </div>
             </div>
@@ -103,7 +168,7 @@ export default async function AdminDashboardPage() {
               {newOrders}
             </div>
             <span className="text-[11px] text-[#6B6B5F] mt-1 block">
-              Menunggu konfirmasi WhatsApp
+              Menunggu konfirmasi admin
             </span>
           </div>
 
@@ -157,10 +222,16 @@ export default async function AdminDashboardPage() {
               Rp{totalRevenue.toLocaleString("id-ID")}
             </div>
             <span className="text-[11px] text-[#6B6B5F] mt-1 block">
-              Dari {totalOrders} total pesanan tercatat
+              Dari {totalOrders} total pesanan
             </span>
           </div>
         </div>
+
+        {/* DP Percentage Settings Card */}
+        <DpSettingsCard initialDp={dpPercentage} />
+
+        {/* Interactive Monthly Booking Calendar */}
+        <BookingCalendar orders={calendarOrders} />
 
         {/* Recent Orders Section */}
         <div className="card-base bg-white border border-[#E4E1D6] rounded-[6px] overflow-hidden">
@@ -202,48 +273,51 @@ export default async function AdminDashboardPage() {
                     </td>
                   </tr>
                 ) : (
-                  recentOrdersRes.rows.map((order) => (
-                    <tr key={String(order.id)} className="hover:bg-[#F7F5EF]/50 transition-colors">
-                      <td className="py-3.5 px-5 font-mono font-medium text-[#2F3D2A]">
-                        {String(order.id)}
-                      </td>
-                      <td className="py-3.5 px-5 font-semibold">
-                        {String(order.customer_name)}
-                      </td>
-                      <td className="py-3.5 px-5 text-[#6B6B5F]">
-                        {String(order.phone)}
-                      </td>
-                      <td className="py-3.5 px-5 font-bold text-[#C1502E]">
-                        Rp{Number(order.total_price).toLocaleString("id-ID")}
-                      </td>
-                      <td className="py-3.5 px-5">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider ${getStatusBadge(
-                            String(order.status)
-                          )}`}
-                        >
-                          {String(order.status)}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-5 text-[#6B6B5F]">
-                        {new Date(String(order.created_at)).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                      <td className="py-3.5 px-5 text-right">
-                        <Link
-                          href={`/admin/pesanan?view=${order.id}`}
-                          className="btn-secondary text-[11px] py-1 px-2.5"
-                        >
-                          Detail
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
+                  recentOrdersRes.rows.map((order) => {
+                    const statusStr = String(order.status === "baru" ? "pending" : order.status);
+                    return (
+                      <tr key={String(order.id)} className="hover:bg-[#F7F5EF]/50 transition-colors">
+                        <td className="py-3.5 px-5 font-mono font-medium text-[#2F3D2A]">
+                          {String(order.id)}
+                        </td>
+                        <td className="py-3.5 px-5 font-semibold">
+                          {String(order.customer_name)}
+                        </td>
+                        <td className="py-3.5 px-5 text-[#6B6B5F]">
+                          {String(order.phone)}
+                        </td>
+                        <td className="py-3.5 px-5 font-bold text-[#C1502E]">
+                          Rp{Number(order.total_price).toLocaleString("id-ID")}
+                        </td>
+                        <td className="py-3.5 px-5">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider ${getStatusBadge(
+                              statusStr
+                            )}`}
+                          >
+                            {getStatusLabel(statusStr)}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-5 text-[#6B6B5F]">
+                          {new Date(String(order.created_at)).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                        <td className="py-3.5 px-5 text-right">
+                          <Link
+                            href={`/admin/pesanan?view=${order.id}`}
+                            className="btn-secondary text-[11px] py-1 px-2.5"
+                          >
+                            Detail
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -253,3 +327,4 @@ export default async function AdminDashboardPage() {
     </div>
   );
 }
+

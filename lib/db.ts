@@ -45,6 +45,7 @@ export async function initDb(): Promise<void> {
       slug TEXT UNIQUE NOT NULL,
       description TEXT NOT NULL,
       images TEXT NOT NULL,
+      stock INTEGER DEFAULT 5,
       is_active INTEGER DEFAULT 1,
       FOREIGN KEY (category_id) REFERENCES categories (id)
     );
@@ -68,7 +69,11 @@ export async function initDb(): Promise<void> {
       address TEXT,
       id_photo_url TEXT NOT NULL,
       total_price INTEGER NOT NULL,
-      status TEXT DEFAULT 'baru',
+      start_date TEXT,
+      end_date TEXT,
+      dp_percentage INTEGER DEFAULT 30,
+      dp_amount INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'pending',
       created_at TEXT NOT NULL
     );
   `);
@@ -86,12 +91,45 @@ export async function initDb(): Promise<void> {
     );
   `);
 
-  // Ensure quantity column exists for existing databases
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
+
+  // Migrations for existing databases
   try {
     await db.execute(`ALTER TABLE order_items ADD COLUMN quantity INTEGER DEFAULT 1`);
-  } catch {
-    // Column already exists or table freshly created
-  }
+  } catch {}
+
+  try {
+    await db.execute(`ALTER TABLE products ADD COLUMN stock INTEGER DEFAULT 5`);
+  } catch {}
+
+  try {
+    await db.execute(`ALTER TABLE orders ADD COLUMN start_date TEXT`);
+  } catch {}
+
+  try {
+    await db.execute(`ALTER TABLE orders ADD COLUMN end_date TEXT`);
+  } catch {}
+
+  try {
+    await db.execute(`ALTER TABLE orders ADD COLUMN dp_percentage INTEGER DEFAULT 30`);
+  } catch {}
+
+  try {
+    await db.execute(`ALTER TABLE orders ADD COLUMN dp_amount INTEGER DEFAULT 0`);
+  } catch {}
+
+  try {
+    await db.execute(`UPDATE orders SET status = 'pending' WHERE status = 'baru'`);
+  } catch {}
+
+  try {
+    await db.execute(`INSERT OR IGNORE INTO settings (key, value) VALUES ('dp_percentage', '30')`);
+  } catch {}
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS admins (
