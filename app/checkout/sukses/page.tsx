@@ -46,7 +46,7 @@ function SuksesContent() {
           </div>
           <div className="flex justify-between">
             <span className="text-[#6B6B5F]">Jumlah Alat Disewa</span>
-            <span className="font-semibold text-[#1E1E1A]">{count} item</span>
+            <span className="font-semibold text-[#1E1E1A]">{count} unit alat</span>
           </div>
           <div className="flex justify-between pt-2 border-t border-[#E4E1D6] font-bold">
             <span className="text-[#1E1E1A]">Total Biaya</span>

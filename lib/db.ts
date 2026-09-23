@@ -81,9 +81,17 @@ export async function initDb(): Promise<void> {
       product_name TEXT NOT NULL,
       days INTEGER NOT NULL,
       price INTEGER NOT NULL,
+      quantity INTEGER NOT NULL DEFAULT 1,
       FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE
     );
   `);
+
+  // Ensure quantity column exists for existing databases
+  try {
+    await db.execute(`ALTER TABLE order_items ADD COLUMN quantity INTEGER DEFAULT 1`);
+  } catch {
+    // Column already exists or table freshly created
+  }
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS admins (

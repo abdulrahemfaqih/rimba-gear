@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ShoppingBag, ArrowLeft, ShieldCheck, Clock, RefreshCw } from "lucide-react";
+import { Check, ShoppingBag, ArrowLeft, ShieldCheck, Clock, RefreshCw, Plus, Minus } from "lucide-react";
 import { useCartStore } from "@/lib/cartStore";
 
 interface PricingTier {
@@ -30,6 +30,7 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
   const [selectedTier, setSelectedTier] = useState<PricingTier>(
     product.pricingTiers[0] || { days: 2, price: 0 }
   );
+  const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
@@ -42,6 +43,7 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
       image: product.images[0] || "/yourbrand.jpg",
       selectedDays: selectedTier.days,
       selectedPrice: selectedTier.price,
+      quantity,
       availableTiers: product.pricingTiers,
     });
 
@@ -175,14 +177,56 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
             </span>
           </div>
 
+          {/* Quantity Selection */}
+          <div className="py-5 border-b border-[#E4E1D6] flex items-center justify-between">
+            <div>
+              <label className="block text-xs uppercase font-bold tracking-wider text-[#1E1E1A]">
+                Jumlah Unit
+              </label>
+              <span className="text-[11px] text-[#6B6B5F]">
+                Tentukan banyak alat yang ingin disewa
+              </span>
+            </div>
+
+            <div className="flex items-center border border-[#E4E1D6] rounded-[6px] bg-white overflow-hidden shadow-xs">
+              <button
+                type="button"
+                onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                disabled={quantity <= 1}
+                className="w-10 h-10 flex items-center justify-center text-[#1E1E1A] hover:bg-[#F7F5EF] active:bg-[#E4E1D6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                aria-label="Kurangi kuantitas"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <div className="w-12 text-center font-heading font-bold text-sm text-[#1E1E1A] border-x border-[#E4E1D6] py-2 bg-[#F7F5EF]">
+                {quantity}
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuantity((prev) => prev + 1)}
+                className="w-10 h-10 flex items-center justify-center text-[#1E1E1A] hover:bg-[#F7F5EF] active:bg-[#E4E1D6] transition-colors"
+                aria-label="Tambah kuantitas"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
           {/* Total Price Display & Add To Cart */}
           <div className="py-6 space-y-4">
             <div>
               <span className="text-xs uppercase tracking-wider text-[#6B6B5F] font-semibold block">
-                Total Biaya Sewa ({selectedTier.days} Hari)
+                Total Biaya Sewa ({selectedTier.days} Hari {quantity > 1 ? `× ${quantity} Unit` : ""})
               </span>
-              <div className="text-3xl font-extrabold font-heading text-[#C1502E]">
-                Rp{selectedTier.price.toLocaleString("id-ID")}
+              <div className="flex items-baseline gap-2 mt-1">
+                <div className="text-3xl font-extrabold font-heading text-[#C1502E]">
+                  Rp{(selectedTier.price * quantity).toLocaleString("id-ID")}
+                </div>
+                {quantity > 1 && (
+                  <span className="text-xs text-[#6B6B5F]">
+                    (@ Rp{selectedTier.price.toLocaleString("id-ID")})
+                  </span>
+                )}
               </div>
             </div>
 

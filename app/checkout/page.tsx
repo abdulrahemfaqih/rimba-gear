@@ -22,6 +22,7 @@ export default function CheckoutPage() {
   const [mounted, setMounted] = useState(false);
   const items = useCartStore((state) => state.items);
   const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
   const clearCart = useCartStore((state) => state.clearCart);
 
   // Form states
@@ -94,6 +95,7 @@ export default function CheckoutPage() {
 
       // 2. Save order to database
       const totalPrice = getTotalPrice();
+      const totalUnits = getTotalItems();
       const orderPayload = {
         customerName: customerName.trim(),
         phone: phone.trim(),
@@ -105,6 +107,7 @@ export default function CheckoutPage() {
           productName: item.name,
           days: item.selectedDays,
           price: item.selectedPrice,
+          quantity: item.quantity || 1,
         })),
       };
 
@@ -124,10 +127,12 @@ export default function CheckoutPage() {
       // 3. Format WhatsApp text
       const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "6281234567890";
       const itemListText = items
-        .map(
-          (item, idx) =>
-            `${idx + 1}. ${item.name} (${item.selectedDays} Hari) - Rp${item.selectedPrice.toLocaleString("id-ID")}`
-        )
+        .map((item, idx) => {
+          const qty = item.quantity || 1;
+          const subtotal = item.selectedPrice * qty;
+          const qtyText = qty > 1 ? ` (${qty} unit)` : "";
+          return `${idx + 1}. ${item.name}${qtyText} [${item.selectedDays} Hari] - Rp${subtotal.toLocaleString("id-ID")}`;
+        })
         .join("\n");
 
       const waMessage = `Halo Admin Your Brand, saya ingin konfirmasi sewa alat outdoor:%0A%0A` +
@@ -144,7 +149,7 @@ export default function CheckoutPage() {
 
       // 4. Clear cart & redirect
       clearCart();
-      router.push(`/checkout/sukses?orderId=${orderId}&waUrl=${encodeURIComponent(waUrl)}&total=${totalPrice}&count=${items.length}`);
+      router.push(`/checkout/sukses?orderId=${orderId}&waUrl=${encodeURIComponent(waUrl)}&total=${totalPrice}&count=${totalUnits}`);
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Terjadi kesalahan saat memproses pesanan.");
@@ -346,24 +351,35 @@ export default function CheckoutPage() {
 
               {/* Items List */}
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                {items.map((item) => (
-                  <div
-                    key={item.productId}
-                    className="flex items-center justify-between text-sm py-2 border-b border-[#E4E1D6]/60 last:border-none"
-                  >
-                    <div>
-                      <div className="font-semibold text-[#1E1E1A] line-clamp-1">
-                        {item.name}
+                {items.map((item) => {
+                  const qty = item.quantity || 1;
+                  const itemSubtotal = item.selectedPrice * qty;
+                  return (
+                    <div
+                      key={item.productId}
+                      className="flex items-center justify-between text-sm py-2 border-b border-[#E4E1D6]/60 last:border-none"
+                    >
+                      <div className="pr-3">
+                        <div className="font-semibold text-[#1E1E1A] line-clamp-1">
+                          {item.name}
+                        </div>
+                        <span className="text-xs text-[#6B6B5F] block">
+                          {item.selectedDays} Hari &bull; {qty} unit
+                        </span>
                       </div>
-                      <span className="text-xs text-[#6B6B5F]">
-                        Durasi: {item.selectedDays} Hari
-                      </span>
+                      <div className="text-right shrink-0">
+                        <span className="font-heading font-bold text-sm text-[#C1502E] block">
+                          Rp{itemSubtotal.toLocaleString("id-ID")}
+                        </span>
+                        {qty > 1 && (
+                          <span className="text-[10px] text-[#6B6B5F]">
+                            @ Rp{item.selectedPrice.toLocaleString("id-ID")}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className="font-heading font-bold text-sm text-[#C1502E]">
-                      Rp{item.selectedPrice.toLocaleString("id-ID")}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Total Price */}

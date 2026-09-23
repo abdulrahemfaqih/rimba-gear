@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
         productName: String(item.product_name),
         days: Number(item.days),
         price: Number(item.price),
+        quantity: Number(item.quantity || 1),
       });
     }
 
@@ -84,8 +85,8 @@ export async function POST(req: NextRequest) {
       const item = items[i];
       const itemId = `item-${orderId}-${i + 1}`;
       await db.execute({
-        sql: `INSERT INTO order_items (id, order_id, product_id, product_name, days, price)
-              VALUES (?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO order_items (id, order_id, product_id, product_name, days, price, quantity)
+              VALUES (?, ?, ?, ?, ?, ?, ?)`,
         args: [
           itemId,
           orderId,
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
           item.name || item.productName,
           Number(item.days || item.selectedDays),
           Number(item.price || item.selectedPrice),
+          Number(item.quantity || 1),
         ],
       });
     }

@@ -21,6 +21,7 @@ interface OrderItem {
   productName: string;
   days: number;
   price: number;
+  quantity?: number;
 }
 
 interface Order {
@@ -230,7 +231,7 @@ function AdminPesananContent() {
                       </td>
                       <td className="py-3.5 px-5 text-center">
                         <span className="bg-[#F7F5EF] px-2 py-0.5 rounded border border-[#E4E1D6]">
-                          {order.items.length} alat
+                          {order.items.reduce((s, it) => s + (it.quantity || 1), 0)} unit
                         </span>
                       </td>
                       <td className="py-3.5 px-5 text-center">
@@ -369,27 +370,39 @@ function AdminPesananContent() {
                         <tr>
                           <th className="py-2.5 px-4">Nama Peralatan</th>
                           <th className="py-2.5 px-4 text-center">Durasi</th>
-                          <th className="py-2.5 px-4 text-right">Harga Sewa</th>
+                          <th className="py-2.5 px-4 text-center">Qty</th>
+                          <th className="py-2.5 px-4 text-right">Harga Satuan</th>
+                          <th className="py-2.5 px-4 text-right">Subtotal</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#E4E1D6]/60">
-                        {selectedOrder.items.map((item, idx) => (
-                          <tr key={idx}>
-                            <td className="py-2.5 px-4 font-semibold text-[#1E1E1A]">
-                              {item.productName}
-                            </td>
-                            <td className="py-2.5 px-4 text-center">
-                              {item.days} Hari
-                            </td>
-                            <td className="py-2.5 px-4 text-right font-medium text-[#C1502E]">
-                              Rp{item.price.toLocaleString("id-ID")}
-                            </td>
-                          </tr>
-                        ))}
+                        {selectedOrder.items.map((item, idx) => {
+                          const qty = item.quantity || 1;
+                          const subtotal = item.price * qty;
+                          return (
+                            <tr key={idx}>
+                              <td className="py-2.5 px-4 font-semibold text-[#1E1E1A]">
+                                {item.productName}
+                              </td>
+                              <td className="py-2.5 px-4 text-center">
+                                {item.days} Hari
+                              </td>
+                              <td className="py-2.5 px-4 text-center font-bold text-[#1E1E1A]">
+                                {qty}x
+                              </td>
+                              <td className="py-2.5 px-4 text-right text-[#6B6B5F]">
+                                Rp{item.price.toLocaleString("id-ID")}
+                              </td>
+                              <td className="py-2.5 px-4 text-right font-medium text-[#C1502E]">
+                                Rp{subtotal.toLocaleString("id-ID")}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                       <tfoot className="bg-[#F7F5EF] border-t border-[#E4E1D6] font-bold">
                         <tr>
-                          <td colSpan={2} className="py-2.5 px-4 text-[#1E1E1A]">
+                          <td colSpan={4} className="py-2.5 px-4 text-[#1E1E1A]">
                             Total Keseluruhan
                           </td>
                           <td className="py-2.5 px-4 text-right text-sm text-[#C1502E]">

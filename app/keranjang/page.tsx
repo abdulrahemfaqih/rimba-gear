@@ -6,15 +6,17 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCartStore } from "@/lib/cartStore";
-import { Trash2, ArrowRight, ShoppingBag, ShieldCheck } from "lucide-react";
+import { Trash2, ArrowRight, ShoppingBag, ShieldCheck, Plus, Minus } from "lucide-react";
 
 export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const items = useCartStore((state) => state.items);
   const updateItemDuration = useCartStore((state) => state.updateItemDuration);
+  const updateItemQuantity = useCartStore((state) => state.updateItemQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const clearCart = useCartStore((state) => state.clearCart);
   const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
 
   useEffect(() => {
     setMounted(true);
@@ -33,6 +35,7 @@ export default function CartPage() {
   }
 
   const totalPrice = getTotalPrice();
+  const totalUnits = getTotalItems();
 
   return (
     <>
@@ -124,14 +127,49 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-[#E4E1D6]">
-                    <div className="text-right">
+                  <div className="flex items-center justify-between sm:justify-end gap-5 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-[#E4E1D6]">
+                    {/* Quantity Stepper */}
+                    <div className="flex items-center border border-[#E4E1D6] rounded-[4px] bg-[#F7F5EF] overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateItemQuantity(item.productId, (item.quantity || 1) - 1)
+                        }
+                        disabled={(item.quantity || 1) <= 1}
+                        className="p-1.5 px-2.5 text-[#1E1E1A] hover:bg-[#E4E1D6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        title="Kurangi jumlah"
+                        aria-label="Kurangi jumlah"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="px-2.5 text-xs font-bold text-[#1E1E1A] min-w-[2rem] text-center">
+                        {item.quantity || 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateItemQuantity(item.productId, (item.quantity || 1) + 1)
+                        }
+                        className="p-1.5 px-2.5 text-[#1E1E1A] hover:bg-[#E4E1D6] transition-colors"
+                        title="Tambah jumlah"
+                        aria-label="Tambah jumlah"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="text-right min-w-[100px]">
                       <span className="text-[11px] uppercase tracking-wider text-[#6B6B5F] block font-medium">
-                        Biaya Sewa
+                        Subtotal
                       </span>
                       <span className="font-heading font-bold text-base text-[#C1502E]">
-                        Rp{item.selectedPrice.toLocaleString("id-ID")}
+                        Rp{((item.selectedPrice) * (item.quantity || 1)).toLocaleString("id-ID")}
                       </span>
+                      {(item.quantity || 1) > 1 && (
+                        <span className="text-[10px] text-[#6B6B5F] block">
+                          Rp{item.selectedPrice.toLocaleString("id-ID")} / unit
+                        </span>
+                      )}
                     </div>
 
                     <button
@@ -156,8 +194,10 @@ export default function CartPage() {
 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between text-[#6B6B5F]">
-                    <span>Jumlah Item</span>
-                    <span className="font-medium text-[#1E1E1A]">{items.length} alat</span>
+                    <span>Jumlah Unit</span>
+                    <span className="font-medium text-[#1E1E1A]">
+                      {totalUnits} unit ({items.length} jenis alat)
+                    </span>
                   </div>
 
                   <div className="flex justify-between text-[#6B6B5F]">

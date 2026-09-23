@@ -9,13 +9,13 @@ import { useCartStore } from "@/lib/cartStore";
 export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const items = useCartStore((state) => state.items);
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const totalItems = mounted ? items.length : 0;
+  const totalItems = mounted ? getTotalItems() : 0;
 
   return (
     <header className="sticky top-0 z-40 bg-[#FFFFFF] border-b border-[#E4E1D6]">
