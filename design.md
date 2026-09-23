@@ -1,4 +1,4 @@
-# Stitch Prompts — [NAMA BRAND] Rental Alat Outdoor
+# Stitch Prompts — Rimba Gear Rental Alat Outdoor
 
 Setiap screen di bawah dibuat **terpisah** (sesuai rekomendasi: 1 prompt = 1 generate di Stitch). Paste `DESIGN.md` dulu di awal sesi Stitch (kalau Stitch mendukung system context), lalu paste prompt tiap halaman satu per satu.
 
@@ -9,7 +9,7 @@ Prinsip desain di semua prompt: **hindari AI slop** — tidak ada gradient ungu 
 ## DESIGN.md (paste sekali di awal, dipakai semua screen)
 
 ```
-Brand: [NAMA BRAND] — rental alat outdoor (tenda, carrier, alat masak, dll)
+Brand: Rimba Gear — rental alat outdoor (tenda, carrier, alat masak, dll)
 Mood: rugged, terpercaya, utilitarian-editorial, bukan playful/childish
 
 Colors:
@@ -49,7 +49,7 @@ Rules to never break:
 
 ## 1. Landing Page (`/`)
 
-Buatkan landing page untuk situs rental alat outdoor bernama [NAMA BRAND].
+Buatkan landing page untuk situs rental alat outdoor bernama Rimba Gear.
 
 Layout:
 - Navbar: logo kiri, menu "Kategori", "Cara Sewa", ikon keranjang kanan dengan badge jumlah item
