@@ -9,13 +9,15 @@ import { useCartStore } from "@/lib/cartStore";
 export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const getTotalItems = useCartStore((state) => state.getTotalItems);
+  const items = useCartStore((state) => state.items);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const totalItems = mounted ? getTotalItems() : 0;
+  const totalItems = mounted
+    ? items.reduce((sum, item) => sum + (item.quantity || 1), 0)
+    : 0;
 
   return (
     <header className="sticky top-0 z-40 bg-[#FFFFFF] border-b border-[#E4E1D6]">
@@ -74,7 +76,10 @@ export default function Navbar() {
             >
               <ShoppingBag className="w-5 h-5 stroke-[2]" />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#C1502E] text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                <span
+                  key={totalItems}
+                  className="absolute -top-1 -right-1 bg-[#C1502E] text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center transition-all animate-in zoom-in-75 duration-200"
+                >
                   {totalItems}
                 </span>
               )}
