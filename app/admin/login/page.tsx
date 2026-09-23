@@ -131,18 +131,18 @@ export default function AdminLoginPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Brand Logo & Title */}
         <div className="text-center mb-6">
-          <div className="relative w-12 h-12 mx-auto mb-3">
+          <div className="relative w-16 h-16 mx-auto mb-3 overflow-hidden rounded-full border-2 border-[#E4E1D6] shadow-sm">
             <Image
-              src="/rimbagear_logo.png"
-              alt="Rimba Gear"
+              src="/yourbrand.jpg"
+              alt="Your Brand"
               fill
-              sizes="48px"
-              className="object-contain"
+              sizes="64px"
+              className="object-cover scale-125"
               priority
             />
           </div>
           <h1 className="font-heading font-extrabold text-2xl text-[#2F3D2A] tracking-tight">
-            RIMBA GEAR
+            YOUR BRAND
           </h1>
           <span className="text-xs uppercase tracking-wider text-[#6B6B5F] font-semibold">
             Portal Administrasi Rental

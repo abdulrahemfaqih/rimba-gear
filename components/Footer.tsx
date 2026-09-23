@@ -12,17 +12,17 @@ export default function Footer() {
           {/* Brand info */}
           <div className="space-y-4 md:col-span-2">
             <div className="flex items-center gap-3">
-              <div className="relative w-8 h-8">
+              <div className="relative w-9 h-9 overflow-hidden rounded-full border border-[#E4E1D6]">
                 <Image
-                  src="/rimbagear_logo.png"
-                  alt="Rimba Gear"
+                  src="/yourbrand.jpg"
+                  alt="Your Brand"
                   fill
-                  className="object-contain"
-                  sizes="32px"
+                  className="object-cover scale-125"
+                  sizes="36px"
                 />
               </div>
               <span className="font-heading font-bold text-lg tracking-tight text-[#2F3D2A]">
-                RIMBA GEAR
+                YOUR BRAND
               </span>
             </div>
             <p className="text-sm text-[#6B6B5F] leading-relaxed max-w-md">
@@ -71,7 +71,7 @@ export default function Footer() {
             <div className="space-y-2 text-sm text-[#6B6B5F]">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-1 text-[#2F3D2A] shrink-0" />
-                <span>Jl. Raya Rinjani No. 45, Pos Rental Rimba Gear (Dekat Basecamp)</span>
+                <span>Jl. Raya Rinjani No. 45, Pos Rental Your Brand (Dekat Basecamp)</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#2F3D2A] shrink-0" />
@@ -93,7 +93,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-[#E4E1D6] flex flex-col sm:flex-row items-center justify-between text-xs text-[#6B6B5F] gap-4">
-          <p>© {new Date().getFullYear()} Rimba Gear. Semua hak cipta dilindungi.</p>
+          <p>© {new Date().getFullYear()} Your Brand. Semua hak cipta dilindungi.</p>
           <div className="flex items-center gap-6">
             <Link href="/admin/login" className="hover:text-[#2F3D2A]">
               Masuk Admin

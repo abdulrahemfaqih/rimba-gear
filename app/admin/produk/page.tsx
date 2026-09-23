@@ -388,7 +388,7 @@ export default function AdminProdukPage() {
                   </tr>
                 ) : (
                   products.map((prod) => {
-                    const thumb = prod.images[0] || "/rimbagear_logo.png";
+                    const thumb = prod.images[0] || "/yourbrand.jpg";
                     return (
                       <tr key={prod.id} className="hover:bg-[#F7F5EF]/50 transition-colors">
                         <td className="py-3 px-5">

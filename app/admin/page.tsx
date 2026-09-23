@@ -72,7 +72,7 @@ export default async function AdminDashboardPage() {
               Dashboard Rental
             </h1>
             <p className="text-xs text-[#6B6B5F] mt-1">
-              Ringkasan operasional rental alat outdoor Rimba Gear
+              Ringkasan operasional rental alat outdoor Your Brand
             </p>
           </div>
 

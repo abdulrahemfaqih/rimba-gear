@@ -23,22 +23,22 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <div className="relative w-9 h-9 overflow-hidden rounded">
+            <div className="relative w-10 h-10 overflow-hidden rounded-full border border-[#E4E1D6] shadow-xs shrink-0">
               <Image
-                src="/rimbagear_logo.png"
-                alt="Rimba Gear Logo"
+                src="/yourbrand.jpg"
+                alt="Your Brand Logo"
                 fill
-                className="object-contain"
-                sizes="36px"
+                className="object-cover scale-125"
+                sizes="40px"
                 priority
               />
             </div>
             <div className="flex flex-col">
               <span className="font-heading font-bold text-lg leading-tight tracking-tight text-[#2F3D2A]">
-                RIMBA GEAR
+                YOUR BRAND
               </span>
               <span className="text-[10px] uppercase tracking-wider text-[#6B6B5F] font-medium">
-                Rental Alat Outdoor
+                Outdoor & Camping Rental
               </span>
             </div>
           </Link>

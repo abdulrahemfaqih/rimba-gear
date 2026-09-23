@@ -310,7 +310,7 @@ export async function seedAdmin(db: Client): Promise<void> {
         "admin-1",
         "admin",
         "rimbagear2026",
-        "Administrator Rimba Gear",
+        "Administrator Your Brand",
         "admin",
         new Date().toISOString(),
       ],

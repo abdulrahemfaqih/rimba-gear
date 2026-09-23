@@ -130,7 +130,7 @@ export default function CheckoutPage() {
         )
         .join("\n");
 
-      const waMessage = `Halo Admin Rimba Gear, saya ingin konfirmasi sewa alat outdoor:%0A%0A` +
+      const waMessage = `Halo Admin Your Brand, saya ingin konfirmasi sewa alat outdoor:%0A%0A` +
         `*ID Pesanan:* ${orderId}%0A` +
         `*Nama Penyewa:* ${customerName}%0A` +
         `*No. WhatsApp:* ${phone}%0A` +

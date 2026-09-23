@@ -39,7 +39,7 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
       productId: product.id,
       name: product.name,
       slug: product.slug,
-      image: product.images[0] || "/rimbagear_logo.png",
+      image: product.images[0] || "/yourbrand.jpg",
       selectedDays: selectedTier.days,
       selectedPrice: selectedTier.price,
       availableTiers: product.pricingTiers,
@@ -51,7 +51,7 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
     }, 2500);
   };
 
-  const currentImage = product.images[selectedImageIndex] || product.images[0] || "/rimbagear_logo.png";
+  const currentImage = product.images[selectedImageIndex] || product.images[0] || "/yourbrand.jpg";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
@@ -112,7 +112,7 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
           <div className="p-4 bg-white border border-[#E4E1D6] rounded-[6px] text-xs text-[#6B6B5F] space-y-2 mt-6">
             <div className="flex items-center gap-2 font-medium text-[#2F3D2A]">
               <ShieldCheck className="w-4 h-4 text-[#3F7D45]" />
-              <span>Standar Kebersihan & Kelayakan Rimba Gear</span>
+              <span>Standar Kebersihan & Kelayakan Your Brand</span>
             </div>
             <p>
               Setiap alat dicek kelengkapannya sebelum diserahkan. Gratis konsultasi cara pemasangan atau penggunaan di basecamp kami.
@@ -221,7 +221,7 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
             </h3>
             <ul className="text-xs text-[#6B6B5F] space-y-2 list-disc pl-4 leading-relaxed">
               <li>Penyewaan wajib menyertakan foto identitas asli (KTP/SIM/KTM) saat checkout.</li>
-              <li>Barang diambil dan dikembalikan ke alamat basecamp Rimba Gear.</li>
+              <li>Barang diambil dan dikembalikan ke alamat basecamp Your Brand.</li>
               <li>Harap menjaga keutuhan peralatan selama masa petualangan di alam terbuka.</li>
             </ul>
           </div>

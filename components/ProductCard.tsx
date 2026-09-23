@@ -21,7 +21,7 @@ export default function ProductCard({
   images,
   minPrice,
 }: ProductCardProps) {
-  const thumbnail = images && images.length > 0 ? images[0] : "/rimbagear_logo.png";
+  const thumbnail = images && images.length > 0 ? images[0] : "/yourbrand.jpg";
 
   return (
     <div className="card-base group flex flex-col overflow-hidden bg-white border border-[#E4E1D6] rounded-[6px] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all">

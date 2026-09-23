@@ -1,4 +1,4 @@
-# PRD — [NAMA BRAND] Rental Alat Outdoor
+# PRD — Your Brand Rental Alat Outdoor
 
 ## 1. Ringkasan Produk
 Website untuk menyewakan alat outdoor (tenda, carrier, alat masak, dll). Customer bisa browsing dan memasukkan barang ke keranjang tanpa login, lalu checkout dengan mengirim data diri + foto identitas, dan transaksi difinalisasi lewat WhatsApp. Admin mengelola kategori, produk, harga sewa per durasi, dan data pesanan masuk.

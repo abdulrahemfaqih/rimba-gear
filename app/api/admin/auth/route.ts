@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         success: true,
         user: {
           username: admin?.username || username,
-          name: admin?.name || "Administrator Rimba Gear",
+          name: admin?.name || "Administrator Your Brand",
         },
       });
 

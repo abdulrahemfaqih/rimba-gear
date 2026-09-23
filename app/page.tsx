@@ -75,7 +75,7 @@ export default async function HomePage() {
           <div className="absolute inset-0">
             <Image
               src="https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=1920&q=80"
-              alt="Outdoor Camping Rimba Gear"
+              alt="Outdoor Camping Your Brand"
               fill
               priority
               className="object-cover object-center opacity-30"
@@ -168,7 +168,7 @@ export default async function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto mb-12">
               <h2 className="text-2xl sm:text-3xl font-bold text-[#1E1E1A] font-heading">
-                Cara Sewa di Rimba Gear
+                Cara Sewa di Your Brand
               </h2>
               <p className="mt-2 text-sm text-[#6B6B5F]">
                 Proses penyewaan sederhana dan transparan dalam 3 langkah mudah
@@ -261,10 +261,10 @@ export default async function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-bold font-heading mb-4 !text-white">
-                  Kenapa Memilih Rimba Gear?
+                  Kenapa Memilih Your Brand?
                 </h2>
                 <p className="text-white/85 leading-relaxed mb-6">
-                  Kami mengerti bahwa keselamatan dan kenyamanan pendakian berawal dari peralatan yang prima. Setiap perlengkapan di Rimba Gear melalui proses pengecekan teliti, pencucian higienis, dan pengeringan sempurna setelah setiap pemakaian.
+                  Kami mengerti bahwa keselamatan dan kenyamanan pendakian berawal dari peralatan yang prima. Setiap perlengkapan di Your Brand melalui proses pengecekan teliti, pencucian higienis, dan pengeringan sempurna setelah setiap pemakaian.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
@@ -294,7 +294,7 @@ export default async function HomePage() {
               <div className="relative aspect-video rounded-[6px] overflow-hidden border border-white/20">
                 <Image
                   src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1000&q=80"
-                  alt="Basecamp Rimba Gear"
+                  alt="Basecamp Your Brand"
                   fill
                   className="object-cover"
                 />

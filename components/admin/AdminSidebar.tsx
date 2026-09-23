@@ -38,17 +38,17 @@ export default function AdminSidebar() {
       {/* Brand header */}
       <div className="p-6 border-b border-[#E4E1D6]">
         <Link href="/admin" className="flex items-center gap-3">
-          <div className="relative w-8 h-8">
+          <div className="relative w-9 h-9 overflow-hidden rounded-full border border-[#E4E1D6]">
             <Image
-              src="/rimbagear_logo.png"
-              alt="Rimba Gear"
+              src="/yourbrand.jpg"
+              alt="Your Brand"
               fill
-              className="object-contain"
+              className="object-cover scale-125"
             />
           </div>
           <div>
             <h1 className="font-heading font-bold text-base text-[#2F3D2A] leading-tight">
-              RIMBA GEAR
+              YOUR BRAND
             </h1>
             <span className="text-[11px] uppercase tracking-wider text-[#6B6B5F] font-medium">
               Admin Panel

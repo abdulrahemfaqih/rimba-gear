@@ -15,10 +15,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Rimba Gear — Rental Alat Outdoor Terpercaya",
+  title: "Your Brand — Rental Alat Outdoor Terpercaya",
   description: "Sewa tenda, carrier, alat masak, penerangan, dan perlengkapan camping berkualitas untuk petualanganmu tanpa repot.",
   icons: {
-    icon: "/rimbagear_logo.png",
+    icon: "/yourbrand.jpg",
   },
 };
 
