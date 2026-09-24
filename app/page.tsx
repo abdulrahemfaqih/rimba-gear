@@ -35,25 +35,25 @@ export default async function HomePage() {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-32">
             <div className="max-w-2xl">
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight !text-white leading-[1.1] mb-6 font-heading">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight !text-white leading-[1.15] sm:leading-[1.1] mb-4 sm:mb-6 font-heading">
                 Sewa Alat Camping, Siap Berangkat Akhir Pekan Ini
               </h1>
-              <p className="text-base sm:text-lg text-white/90 leading-relaxed mb-8">
+              <p className="text-sm sm:text-lg text-white/90 leading-relaxed mb-6 sm:mb-8">
                 Tenda, carrier, alat masak, penerangan, dan perlengkapan petualangan lengkap.
                 Pilih durasi sewa fleksibel, tanpa ribet daftar akun, dan langsung konfirmasi via WhatsApp.
               </p>
 
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                 <Link
                   href="/kategori"
-                  className="bg-[#C1502E] hover:bg-[#A74223] text-white px-6 py-3.5 text-base font-semibold rounded-[6px] shadow-md flex items-center gap-2 transition-colors"
+                  className="bg-[#C1502E] hover:bg-[#A74223] text-white px-6 py-3.5 text-base font-semibold rounded-[6px] shadow-md flex items-center justify-center gap-2 transition-colors text-center"
                 >
                   <span>Lihat Semua Alat</span>
                   <ArrowRight className="w-4 h-4 text-white" />
                 </Link>
                 <Link
                   href="#cara-sewa"
-                  className="bg-white/10 hover:bg-white/20 text-white border border-white/40 px-6 py-3.5 text-base font-semibold rounded-[6px] transition-colors"
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/40 px-6 py-3.5 text-base font-semibold rounded-[6px] transition-colors text-center justify-center flex items-center"
                 >
                   Cara Sewa
                 </Link>

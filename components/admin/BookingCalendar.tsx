@@ -228,78 +228,81 @@ export default function BookingCalendar({ orders }: BookingCalendarProps) {
         </div>
       </div>
 
-      {/* Day of week headers */}
-      <div className="grid grid-cols-7 border-b border-[#E4E1D6] bg-[#F7F5EF] text-center text-xs font-semibold text-[#6B6B5F] py-2">
-        {dayNames.map((name) => (
-          <div key={name}>{name}</div>
-        ))}
-      </div>
+      {/* Day of week headers and Grid (Scrollable on small mobile screens) */}
+      <div className="overflow-x-auto">
+        <div className="min-w-[560px] sm:min-w-0">
+          <div className="grid grid-cols-7 border-b border-[#E4E1D6] bg-[#F7F5EF] text-center text-xs font-semibold text-[#6B6B5F] py-2">
+            {dayNames.map((name) => (
+              <div key={name}>{name}</div>
+            ))}
+          </div>
 
-      {/* Grid of days */}
-      <div className="grid grid-cols-7 divide-x divide-y divide-[#E4E1D6]/70">
-        {calendarDays.map((cd, idx) => {
-          const dayOrders = getOrdersForDate(cd.dateString);
-          const hasOrders = dayOrders.length > 0;
+          <div className="grid grid-cols-7 divide-x divide-y divide-[#E4E1D6]/70">
+            {calendarDays.map((cd, idx) => {
+              const dayOrders = getOrdersForDate(cd.dateString);
+              const hasOrders = dayOrders.length > 0;
 
-          return (
-            <div
-              key={idx}
-              onClick={() => setSelectedDayString(cd.dateString)}
-              className={`min-h-[90px] sm:min-h-[105px] p-1.5 sm:p-2 flex flex-col cursor-pointer transition-colors relative ${
-                cd.isCurrentMonth
-                  ? "bg-white hover:bg-[#F7F5EF]/60"
-                  : "bg-[#F7F5EF]/30 text-gray-400 hover:bg-[#F7F5EF]/70"
-              }`}
-            >
-              {/* Day header: number */}
-              <div className="flex items-center justify-between mb-1">
-                <span
-                  className={`text-xs font-medium w-6 h-6 rounded-full flex items-center justify-center ${
-                    cd.isToday
-                      ? "bg-[#2F3D2A] text-white font-bold"
-                      : cd.isCurrentMonth
-                      ? "text-[#1E1E1A]"
-                      : "text-gray-400"
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setSelectedDayString(cd.dateString)}
+                  className={`min-h-[90px] sm:min-h-[105px] p-1.5 sm:p-2 flex flex-col cursor-pointer transition-colors relative ${
+                    cd.isCurrentMonth
+                      ? "bg-white hover:bg-[#F7F5EF]/60"
+                      : "bg-[#F7F5EF]/30 text-gray-400 hover:bg-[#F7F5EF]/70"
                   }`}
                 >
-                  {cd.dayNumber}
-                </span>
+                  {/* Day header: number */}
+                  <div className="flex items-center justify-between mb-1">
+                    <span
+                      className={`text-xs font-medium w-6 h-6 rounded-full flex items-center justify-center ${
+                        cd.isToday
+                          ? "bg-[#2F3D2A] text-white font-bold"
+                          : cd.isCurrentMonth
+                          ? "text-[#1E1E1A]"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {cd.dayNumber}
+                    </span>
 
-                {hasOrders && (
-                  <span className="text-[10px] font-bold text-[#2F3D2A] bg-[#2F3D2A]/10 px-1.5 py-0.2 rounded">
-                    {dayOrders.reduce(
-                      (s, o) => s + o.items.reduce((sum, it) => sum + (it.quantity || 1), 0),
-                      0
-                    )}{" "}
-                    unit
-                  </span>
-                )}
-              </div>
-
-              {/* Booking pills list */}
-              <div className="space-y-1 overflow-hidden flex-1">
-                {dayOrders.slice(0, 2).map((order) => (
-                  <div
-                    key={order.id}
-                    className={`text-[10px] px-1.5 py-0.5 rounded border truncate font-medium ${getStatusBadgeStyle(
-                      order.status
-                    )}`}
-                    title={`${order.customerName} - ${order.items.map((i) => `${i.productName} (${i.quantity}x)`).join(", ")}`}
-                  >
-                    <span className="font-bold mr-1">[{getStatusLabel(order.status)}]</span>
-                    {order.customerName}
+                    {hasOrders && (
+                      <span className="text-[10px] font-bold text-[#2F3D2A] bg-[#2F3D2A]/10 px-1.5 py-0.2 rounded">
+                        {dayOrders.reduce(
+                          (s, o) => s + o.items.reduce((sum, it) => sum + (it.quantity || 1), 0),
+                          0
+                        )}{" "}
+                        unit
+                      </span>
+                    )}
                   </div>
-                ))}
 
-                {dayOrders.length > 2 && (
-                  <span className="text-[9px] text-[#6B6B5F] font-semibold block px-1">
-                    +{dayOrders.length - 2} booking lagi
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                  {/* Booking pills list */}
+                  <div className="space-y-1 overflow-hidden flex-1">
+                    {dayOrders.slice(0, 2).map((order) => (
+                      <div
+                        key={order.id}
+                        className={`text-[10px] px-1.5 py-0.5 rounded border truncate font-medium ${getStatusBadgeStyle(
+                          order.status
+                        )}`}
+                        title={`${order.customerName} - ${order.items.map((i) => `${i.productName} (${i.quantity}x)`).join(", ")}`}
+                      >
+                        <span className="font-bold mr-1">[{getStatusLabel(order.status)}]</span>
+                        {order.customerName}
+                      </div>
+                    ))}
+
+                    {dayOrders.length > 2 && (
+                      <span className="text-[9px] text-[#6B6B5F] font-semibold block px-1">
+                        +{dayOrders.length - 2} booking lagi
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Legend below calendar */}
