@@ -389,8 +389,9 @@ export async function getProducts(options: {
     if (categoryId) {
       query = query.eq("category_id", categoryId);
     }
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+    const cleanSearch = search ? search.trim().replace(/[,()"\\]/g, " ") : "";
+    if (cleanSearch) {
+      query = query.or(`name.ilike.%${cleanSearch}%,description.ilike.%${cleanSearch}%`);
     }
     if (limit) {
       query = query.limit(limit);
@@ -454,9 +455,10 @@ export async function getProducts(options: {
     sql += " AND p.category_id = ?";
     args.push(categoryId);
   }
-  if (search) {
+  const cleanSearch = search ? search.trim() : "";
+  if (cleanSearch) {
     sql += " AND (p.name LIKE ? OR p.description LIKE ?)";
-    args.push(`%${search}%`, `%${search}%`);
+    args.push(`%${cleanSearch}%`, `%${cleanSearch}%`);
   }
   sql += " ORDER BY p.name ASC";
   if (limit) {

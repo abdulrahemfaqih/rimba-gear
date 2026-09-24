@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import CategorySearchBox from "@/components/CategorySearchBox";
 import { getCategoryBySlug, getProducts } from "@/lib/db";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function CategoryDetailPage({
 }: CategoryDetailPageProps) {
   const { slug } = await params;
   const sp = searchParams ? await searchParams : {};
-  const query = sp.q || "";
+  const query = (sp.q || "").trim();
 
   const category = await getCategoryBySlug(slug);
   if (!category) {
@@ -51,44 +52,73 @@ export default async function CategoryDetailPage({
         </nav>
 
         {/* Heading & Search Bar */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-6 border-b border-[#E4E1D6]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 pb-6 border-b border-[#E4E1D6]">
           <div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1E1E1A] font-heading">
               {category.name}
             </h1>
             <p className="mt-1 text-sm text-[#6B6B5F]">
-              Menampilkan {products.length} pilihan alat sewa dalam kategori ini
+              {query
+                ? `Menemukan ${products.length} alat sewa untuk "${query}"`
+                : `Menampilkan ${products.length} pilihan alat sewa dalam kategori ini`}
             </p>
           </div>
 
           {/* Search bar */}
-          <form method="GET" className="relative w-full md:w-72">
-            <Search className="w-4 h-4 text-[#6B6B5F] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              name="q"
-              defaultValue={query}
-              placeholder="Cari alat di kategori ini..."
-              className="input-hairline pl-9 pr-3 py-2 text-sm w-full bg-white"
-            />
-          </form>
+          <CategorySearchBox categorySlug={category.slug} initialQuery={query} />
         </div>
+
+        {/* Active Filter Banner */}
+        {query && (
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-8 p-3.5 bg-white border border-[#E4E1D6] rounded-[6px]">
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-[#6B6B5F]">
+              <span>Hasil pencarian untuk:</span>
+              <span className="font-bold text-[#1E1E1A] bg-[#F7F5EF] px-2.5 py-0.5 rounded border border-[#E4E1D6]">
+                &quot;{query}&quot;
+              </span>
+              <span className="text-[#2F3D2A] font-semibold">
+                ({products.length} alat ditemukan)
+              </span>
+            </div>
+
+            <Link
+              href={`/kategori/${category.slug}`}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C1502E] hover:text-[#A74223] transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Hapus Filter Pencarian</span>
+            </Link>
+          </div>
+        )}
 
         {/* Products Grid */}
         {products.length === 0 ? (
-          <div className="card-base p-12 text-center bg-white border border-[#E4E1D6] rounded-[6px] max-w-md mx-auto my-12">
+          <div className="card-base p-8 sm:p-12 text-center bg-white border border-[#E4E1D6] rounded-[6px] max-w-md mx-auto my-12">
             <p className="font-heading font-semibold text-lg text-[#1E1E1A] mb-2">
               Tidak ada produk ditemukan
             </p>
             <p className="text-sm text-[#6B6B5F] mb-6">
               {query
-                ? `Pencarian "${query}" tidak menemukan alat pada kategori ini.`
-                : "Belum ada peralatan aktif pada kategori ini."}
+                ? `Pencarian "${query}" tidak menemukan alat pada kategori ${category.name}.`
+                : `Belum ada peralatan aktif pada kategori ${category.name}.`}
             </p>
-            <Link href="/kategori" className="btn-secondary text-sm inline-flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              <span>Kembali ke Semua Kategori</span>
-            </Link>
+            {query ? (
+              <Link
+                href={`/kategori/${category.slug}`}
+                className="btn-primary text-sm inline-flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Lihat Semua Alat {category.name}</span>
+              </Link>
+            ) : (
+              <Link
+                href="/kategori"
+                className="btn-secondary text-sm inline-flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Kembali ke Semua Kategori</span>
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -113,3 +143,4 @@ export default async function CategoryDetailPage({
     </>
   );
 }
+

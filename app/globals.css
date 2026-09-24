@@ -118,10 +118,21 @@ h1, h2, h3, h4, h5, h6 {
   padding: 10px 12px;
   color: var(--color-text-primary);
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .input-hairline:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
+
+/* Dedicated search input padding to prevent overlapping with search icon & clear button */
+.input-search {
+  padding-left: 2.5rem !important;
+  padding-right: 2.25rem !important;
+}
+
+.input-search-left-only {
+  padding-left: 2.5rem !important;
+}
+

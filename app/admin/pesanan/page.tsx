@@ -159,13 +159,16 @@ function AdminPesananContent() {
   };
 
   const filteredOrders = orders.filter((o) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      o.customerName.toLowerCase().includes(q) ||
-      o.phone.toLowerCase().includes(q) ||
-      o.id.toLowerCase().includes(q)
-    );
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const matchCustomer = (o.customerName || "").toLowerCase().includes(q);
+    const matchPhone = (o.phone || "").toLowerCase().includes(q);
+    const matchId = (o.id || "").toLowerCase().includes(q);
+    const matchAddress = o.address ? o.address.toLowerCase().includes(q) : false;
+    const matchItem =
+      o.items &&
+      o.items.some((item) => (item.productName || "").toLowerCase().includes(q));
+    return matchCustomer || matchPhone || matchId || matchAddress || matchItem;
   });
 
   return (
@@ -185,15 +188,30 @@ function AdminPesananContent() {
           </div>
 
           {/* Search Box */}
-          <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 text-[#6B6B5F] absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 text-[#6B6B5F] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Cari nama, no HP, ID..."
+              placeholder="Cari nama, HP, ID, atau nama alat..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-hairline pl-9 pr-3 py-1.5 text-xs w-full bg-white"
+              style={{
+                paddingLeft: "2.5rem",
+                paddingRight: searchQuery ? "2.25rem" : "0.75rem",
+              }}
+              className="input-hairline input-search text-xs w-full bg-white transition-all focus:border-[#2F3D2A]"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                title="Hapus pencarian"
+                aria-label="Hapus pencarian"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6B6B5F] hover:text-[#1E1E1A] p-0.5 rounded-full hover:bg-[#F7F5EF] transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -222,6 +240,27 @@ function AdminPesananContent() {
           ))}
         </div>
 
+        {/* Active search query feedback */}
+        {searchQuery.trim() && (
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4 p-3 bg-white border border-[#E4E1D6] rounded-[6px] text-xs text-[#6B6B5F]">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span>
+                Menemukan <strong className="text-[#1E1E1A]">{filteredOrders.length}</strong> pesanan untuk pencarian:
+              </span>
+              <span className="font-semibold text-[#1E1E1A] bg-[#F7F5EF] px-2 py-0.5 rounded border border-[#E4E1D6]">
+                &quot;{searchQuery}&quot;
+              </span>
+            </div>
+            <button
+              onClick={() => setSearchQuery("")}
+              className="inline-flex items-center gap-1 text-[#C1502E] hover:text-[#A74223] font-semibold transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Hapus Filter Pencarian</span>
+            </button>
+          </div>
+        )}
+
         {/* Orders Table */}
         <div className="card-base bg-white border border-[#E4E1D6] rounded-[6px] overflow-hidden">
           <div className="overflow-x-auto">
@@ -247,8 +286,28 @@ function AdminPesananContent() {
                   </tr>
                 ) : filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-[#6B6B5F]">
-                      Tidak ada pesanan dengan filter status ini.
+                    <td colSpan={8} className="py-12 text-center text-[#6B6B5F]">
+                      <div className="max-w-sm mx-auto space-y-2">
+                        <p className="font-semibold text-sm text-[#1E1E1A]">
+                          {searchQuery
+                            ? `Tidak ada pesanan yang cocok dengan "${searchQuery}"`
+                            : "Tidak ada pesanan dengan status ini."}
+                        </p>
+                        <p className="text-xs text-[#6B6B5F]">
+                          {searchQuery
+                            ? "Coba gunakan kata kunci lain seperti nama pemesan, nomor HP, ID pesanan, atau nama alat sewa."
+                            : "Pesanan baru akan muncul di sini setelah pelanggan melakukan checkout."}
+                        </p>
+                        {searchQuery && (
+                          <button
+                            onClick={() => setSearchQuery("")}
+                            className="mt-2 btn-secondary text-xs py-1.5 px-3 inline-flex items-center gap-1.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Reset Pencarian</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ) : (
