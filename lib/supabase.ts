@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { optimizeImageToWebp } from "./imageOptimizer";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -42,23 +43,30 @@ export function getSupabaseAdmin(): SupabaseClient {
 
 /**
  * Upload buffer gambar ke Supabase Storage Bucket 'outdoor'
+ * Otomatis mengonversi ke WebP & kompresi kualitas tinggi (tetap jernih)
  */
 export async function uploadToSupabaseStorage(
   buffer: Buffer,
-  originalName: string,
-  contentType: string = "image/webp"
+  originalName: string
 ): Promise<string> {
   const supabase = getSupabaseAdmin();
-  const ext = originalName.split(".").pop() || "webp";
+
+  // Optimasi otomatis: convert ke WebP, resize max 1600px, kompresi jernih quality 82%
+  const { buffer: optimizedBuffer, contentType } = await optimizeImageToWebp(buffer, {
+    maxWidth: 1600,
+    maxHeight: 1600,
+    quality: 82,
+  });
+
   const cleanName = originalName
     .replace(/\.[^/.]+$/, "")
     .replace(/[^a-zA-Z0-9_-]/g, "")
     .slice(0, 30);
-  const filePath = `uploads/${Date.now()}-${cleanName || "image"}.${ext}`;
+  const filePath = `uploads/${Date.now()}-${cleanName || "image"}.webp`;
 
   const { data, error } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(filePath, buffer, {
+    .upload(filePath, optimizedBuffer, {
       contentType,
       upsert: true,
     });

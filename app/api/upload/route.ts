@@ -3,16 +3,16 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { v2 as cloudinary } from "cloudinary";
 import { uploadToSupabaseStorage } from "@/lib/supabase";
+import { optimizeImageToWebp } from "@/lib/imageOptimizer";
 
 async function uploadSingleBuffer(
   buffer: Buffer,
-  originalName: string,
-  mimeType: string
+  originalName: string
 ): Promise<string> {
-  // 1. Prioritaskan Supabase Storage jika URL & KEY sudah diisi
+  // 1. Prioritaskan Supabase Storage jika URL & KEY sudah diisi (Otomatis WebP + Kompresi Jernih)
   if (process.env.NEXT_PUBLIC_SUPABASE_URL && (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
     try {
-      const url = await uploadToSupabaseStorage(buffer, originalName, mimeType);
+      const url = await uploadToSupabaseStorage(buffer, originalName);
       return url;
     } catch (err) {
       console.warn("Supabase storage upload failed, falling back to secondary providers...", err);
@@ -62,19 +62,24 @@ async function uploadSingleBuffer(
     return secureUrl;
   }
 
-  // 3. Fallback ke local storage (/public/uploads)
-  const ext = path.extname(originalName) || ".jpg";
+  // 3. Fallback ke local storage (/public/uploads) dengan konversi WebP & kompresi jernih
+  const { buffer: optimizedBuffer } = await optimizeImageToWebp(buffer, {
+    maxWidth: 1600,
+    maxHeight: 1600,
+    quality: 82,
+  });
+
   const cleanBase = path
-    .basename(originalName, ext)
+    .basename(originalName, path.extname(originalName))
     .replace(/[^a-zA-Z0-9_-]/g, "")
     .slice(0, 20);
-  const filename = `${Date.now()}-${cleanBase || "upload"}${ext}`;
+  const filename = `${Date.now()}-${cleanBase || "upload"}.webp`;
 
   const uploadsDir = path.join(process.cwd(), "public", "uploads");
   await mkdir(uploadsDir, { recursive: true });
 
   const filePath = path.join(uploadsDir, filename);
-  await writeFile(filePath, buffer);
+  await writeFile(filePath, optimizedBuffer);
 
   return `/uploads/${filename}`;
 }
@@ -97,7 +102,7 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const url = await uploadSingleBuffer(buffer, file.name, file.type || "image/webp");
+      const url = await uploadSingleBuffer(buffer, file.name);
       uploadedUrls.push(url);
     }
 
