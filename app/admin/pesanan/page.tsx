@@ -191,7 +191,8 @@ function AdminPesananContent() {
           <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 text-[#6B6B5F] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
-              type="text"
+              type="search"
+              enterKeyHint="search"
               placeholder="Cari nama, HP, ID, atau nama alat..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -199,7 +200,7 @@ function AdminPesananContent() {
                 paddingLeft: "2.5rem",
                 paddingRight: searchQuery ? "2.25rem" : "0.75rem",
               }}
-              className="input-hairline input-search text-xs w-full bg-white transition-all focus:border-[#2F3D2A]"
+              className="input-hairline input-search text-xs w-full bg-white transition-all focus:border-[#2F3D2A] [&::-webkit-search-cancel-button]:hidden"
             />
             {searchQuery && (
               <button
