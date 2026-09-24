@@ -66,10 +66,10 @@ export default async function AdminDashboardPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F7F5EF]">
+    <div className="flex h-screen overflow-hidden bg-[#F7F5EF]">
       <AdminSidebar />
 
-      <main className="flex-1 p-6 lg:p-10 overflow-y-auto space-y-8">
+      <main className="flex-1 h-screen p-6 lg:p-10 overflow-y-auto space-y-8">
         {/* Header */}
         <div className="pb-4 border-b border-[#E4E1D6] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>

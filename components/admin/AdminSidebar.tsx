@@ -34,9 +34,9 @@ export default function AdminSidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-[#E4E1D6] flex flex-col shrink-0 min-h-screen">
+    <aside className="w-64 bg-white border-r border-[#E4E1D6] flex flex-col shrink-0 h-screen sticky top-0 z-30 select-none">
       {/* Brand header */}
-      <div className="p-6 border-b border-[#E4E1D6]">
+      <div className="p-6 border-b border-[#E4E1D6] shrink-0">
         <Link href="/admin" className="flex items-center gap-3">
           <div className="relative w-9 h-9 overflow-hidden rounded-full border border-[#E4E1D6]">
             <Image
@@ -57,8 +57,8 @@ export default function AdminSidebar() {
         </Link>
       </div>
 
-      {/* Nav links */}
-      <nav className="p-4 space-y-1 flex-1">
+      {/* Nav links (Scrolls internally if viewport is small) */}
+      <nav className="p-4 space-y-1 flex-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -79,8 +79,8 @@ export default function AdminSidebar() {
         })}
       </nav>
 
-      {/* Footer / Utilities */}
-      <div className="p-4 border-t border-[#E4E1D6] space-y-2">
+      {/* Footer / Utilities (Pinned to bottom of viewport) */}
+      <div className="p-4 border-t border-[#E4E1D6] space-y-2 shrink-0 bg-white">
         <Link
           href="/"
           target="_blank"
