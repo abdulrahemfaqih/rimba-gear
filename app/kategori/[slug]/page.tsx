@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
-import { getDb, initDb } from "@/lib/db";
+import { getCategoryBySlug, getProducts } from "@/lib/db";
 import { ArrowLeft, Search } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -17,73 +17,19 @@ export default async function CategoryDetailPage({
   params,
   searchParams,
 }: CategoryDetailPageProps) {
-  await initDb();
   const { slug } = await params;
   const sp = searchParams ? await searchParams : {};
   const query = sp.q || "";
 
-  const db = getDb();
-
-  // Find category
-  const catRes = await db.execute({
-    sql: `SELECT * FROM categories WHERE slug = ? AND is_active = 1 LIMIT 1`,
-    args: [slug],
-  });
-
-  if (catRes.rows.length === 0) {
+  const category = await getCategoryBySlug(slug);
+  if (!category) {
     notFound();
   }
 
-  const category = catRes.rows[0];
-  const categoryId = String(category.id);
-  const categoryName = String(category.name);
-
-  // Find products in this category
-  let prodSql = `
-    SELECT p.*, c.name as category_name, c.slug as category_slug
-    FROM products p
-    JOIN categories c ON p.category_id = c.id
-    WHERE p.category_id = ? AND p.is_active = 1
-  `;
-  const prodArgs: any[] = [categoryId];
-
-  if (query) {
-    prodSql += ` AND (p.name LIKE ? OR p.description LIKE ?)`;
-    prodArgs.push(`%${query}%`, `%${query}%`);
-  }
-
-  prodSql += ` ORDER BY p.name ASC`;
-
-  const prodRes = await db.execute({ sql: prodSql, args: prodArgs });
-
-  // Get tiers for min price calculation
-  const tiersRes = await db.execute(`SELECT * FROM pricing_tiers`);
-  const tiersMap: Record<string, number> = {};
-  for (const t of tiersRes.rows) {
-    const pId = String(t.product_id);
-    const price = Number(t.price);
-    if (!tiersMap[pId] || price < tiersMap[pId]) {
-      tiersMap[pId] = price;
-    }
-  }
-
-  const products = prodRes.rows.map((row) => {
-    let images: string[] = [];
-    try {
-      images = JSON.parse(String(row.images));
-    } catch {
-      images = [String(row.images)];
-    }
-    return {
-      id: String(row.id),
-      name: String(row.name),
-      slug: String(row.slug),
-      categoryName: String(row.category_name),
-      categorySlug: String(row.category_slug),
-      description: String(row.description),
-      images,
-      minPrice: tiersMap[String(row.id)] || 20000,
-    };
+  const products = await getProducts({
+    categoryId: category.id,
+    search: query,
+    includeInactive: false,
   });
 
   return (
@@ -101,14 +47,14 @@ export default async function CategoryDetailPage({
             Kategori
           </Link>
           <span>/</span>
-          <span className="text-[#1E1E1A] font-medium">{categoryName}</span>
+          <span className="text-[#1E1E1A] font-medium">{category.name}</span>
         </nav>
 
         {/* Heading & Search Bar */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-6 border-b border-[#E4E1D6]">
           <div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1E1E1A] font-heading">
-              {categoryName}
+              {category.name}
             </h1>
             <p className="mt-1 text-sm text-[#6B6B5F]">
               Menampilkan {products.length} pilihan alat sewa dalam kategori ini

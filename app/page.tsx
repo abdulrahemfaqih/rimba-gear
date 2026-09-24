@@ -3,66 +3,15 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
-import { getDb, initDb } from "@/lib/db";
+import { getCategories, getProducts } from "@/lib/db";
 import { ArrowRight, ShieldCheck, Sparkles, Clock, CheckCircle2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  await initDb();
-  const db = getDb();
-
-  // Fetch active categories
-  const catRes = await db.execute(`
-    SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC LIMIT 8
-  `);
-
-  // Fetch featured products
-  const prodRes = await db.execute(`
-    SELECT p.*, c.name as category_name, c.slug as category_slug
-    FROM products p
-    JOIN categories c ON p.category_id = c.id
-    WHERE p.is_active = 1
-    ORDER BY p.name ASC
-    LIMIT 6
-  `);
-
-  // Fetch tiers for min price calculation
-  const tiersRes = await db.execute(`SELECT * FROM pricing_tiers`);
-  const tiersMap: Record<string, number> = {};
-  for (const t of tiersRes.rows) {
-    const pId = String(t.product_id);
-    const price = Number(t.price);
-    if (!tiersMap[pId] || price < tiersMap[pId]) {
-      tiersMap[pId] = price;
-    }
-  }
-
-  const categories = catRes.rows.map((row) => ({
-    id: String(row.id),
-    name: String(row.name),
-    slug: String(row.slug),
-    imageUrl: String(row.image_url),
-  }));
-
-  const products = prodRes.rows.map((row) => {
-    let images: string[] = [];
-    try {
-      images = JSON.parse(String(row.images));
-    } catch {
-      images = [String(row.images)];
-    }
-    return {
-      id: String(row.id),
-      name: String(row.name),
-      slug: String(row.slug),
-      categoryName: String(row.category_name),
-      categorySlug: String(row.category_slug),
-      description: String(row.description),
-      images,
-      minPrice: tiersMap[String(row.id)] || 20000,
-    };
-  });
+  const allCategories = await getCategories({ includeInactive: false });
+  const categories = allCategories.slice(0, 8);
+  const products = await getProducts({ includeInactive: false, limit: 6 });
 
   return (
     <>

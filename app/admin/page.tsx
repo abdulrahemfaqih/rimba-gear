@@ -1,8 +1,8 @@
 import Link from "next/link";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import BookingCalendar, { CalendarOrder } from "@/components/admin/BookingCalendar";
+import BookingCalendar from "@/components/admin/BookingCalendar";
 import DpSettingsCard from "@/components/admin/DpSettingsCard";
-import { getDb, initDb } from "@/lib/db";
+import { getAdminDashboardStats } from "@/lib/db";
 import {
   Package,
   Layers,
@@ -14,76 +14,16 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  await initDb();
-  const db = getDb();
-
-  // Metrics
-  const ordersCountRes = await db.execute(`
-    SELECT 
-      COUNT(*) as total_orders,
-      SUM(CASE WHEN status = 'pending' OR status = 'baru' THEN 1 ELSE 0 END) as new_orders,
-      SUM(total_price) as total_revenue
-    FROM orders
-  `);
-
-  const prodCountRes = await db.execute(`
-    SELECT COUNT(*) as total_products FROM products WHERE is_active = 1
-  `);
-
-  const catCountRes = await db.execute(`
-    SELECT COUNT(*) as total_categories FROM categories WHERE is_active = 1
-  `);
-
-  // Settings: DP percentage
-  const settingsRes = await db.execute("SELECT * FROM settings WHERE key = 'dp_percentage'");
-  const dpPercentage = parseInt(String(settingsRes.rows[0]?.value || "30"), 10) || 30;
-
-  // Active bookings for calendar
-  const allOrdersRes = await db.execute(`
-    SELECT o.id, o.customer_name, o.phone, o.start_date, o.end_date, o.total_price, o.dp_amount, o.status,
-           oi.product_name, oi.quantity
-    FROM orders o
-    LEFT JOIN order_items oi ON o.id = oi.order_id
-    WHERE o.status != 'dibatalkan'
-    ORDER BY o.created_at DESC
-  `);
-
-  const calendarOrdersMap: Record<string, CalendarOrder> = {};
-  for (const row of allOrdersRes.rows) {
-    const oId = String(row.id);
-    if (!calendarOrdersMap[oId]) {
-      calendarOrdersMap[oId] = {
-        id: oId,
-        customerName: String(row.customer_name),
-        phone: String(row.phone),
-        startDate: row.start_date ? String(row.start_date) : "",
-        endDate: row.end_date ? String(row.end_date) : "",
-        totalPrice: Number(row.total_price),
-        dpAmount: Number(row.dp_amount || 0),
-        status: String(row.status === "baru" ? "pending" : row.status),
-        items: [],
-      };
-    }
-    if (row.product_name) {
-      calendarOrdersMap[oId].items.push({
-        productName: String(row.product_name),
-        quantity: Number(row.quantity || 1),
-      });
-    }
-  }
-
-  const calendarOrders = Object.values(calendarOrdersMap);
-
-  // Recent 5 orders
-  const recentOrdersRes = await db.execute(`
-    SELECT * FROM orders ORDER BY created_at DESC LIMIT 5
-  `);
-
-  const totalOrders = Number(ordersCountRes.rows[0]?.total_orders || 0);
-  const newOrders = Number(ordersCountRes.rows[0]?.new_orders || 0);
-  const totalRevenue = Number(ordersCountRes.rows[0]?.total_revenue || 0);
-  const totalProducts = Number(prodCountRes.rows[0]?.total_products || 0);
-  const totalCategories = Number(catCountRes.rows[0]?.total_categories || 0);
+  const {
+    totalOrders,
+    newOrders,
+    totalRevenue,
+    totalProducts,
+    totalCategories,
+    dpPercentage,
+    calendarOrders,
+    recentOrders,
+  } = await getAdminDashboardStats();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -266,14 +206,14 @@ export default async function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E4E1D6]/60 text-[#1E1E1A]">
-                {recentOrdersRes.rows.length === 0 ? (
+                {recentOrders.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-8 text-center text-[#6B6B5F]">
                       Belum ada pesanan masuk.
                     </td>
                   </tr>
                 ) : (
-                  recentOrdersRes.rows.map((order) => {
+                  recentOrders.map((order) => {
                     const statusStr = String(order.status === "baru" ? "pending" : order.status);
                     return (
                       <tr key={String(order.id)} className="hover:bg-[#F7F5EF]/50 transition-colors">
@@ -281,13 +221,13 @@ export default async function AdminDashboardPage() {
                           {String(order.id)}
                         </td>
                         <td className="py-3.5 px-5 font-semibold">
-                          {String(order.customer_name)}
+                          {String(order.customerName)}
                         </td>
                         <td className="py-3.5 px-5 text-[#6B6B5F]">
                           {String(order.phone)}
                         </td>
                         <td className="py-3.5 px-5 font-bold text-[#C1502E]">
-                          Rp{Number(order.total_price).toLocaleString("id-ID")}
+                          Rp{Number(order.totalPrice).toLocaleString("id-ID")}
                         </td>
                         <td className="py-3.5 px-5">
                           <span
@@ -299,7 +239,7 @@ export default async function AdminDashboardPage() {
                           </span>
                         </td>
                         <td className="py-3.5 px-5 text-[#6B6B5F]">
-                          {new Date(String(order.created_at)).toLocaleDateString("id-ID", {
+                          {new Date(String(order.createdAt)).toLocaleDateString("id-ID", {
                             day: "numeric",
                             month: "short",
                             year: "numeric",
@@ -327,4 +267,3 @@ export default async function AdminDashboardPage() {
     </div>
   );
 }
-

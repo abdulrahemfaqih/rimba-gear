@@ -2,12 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { v2 as cloudinary } from "cloudinary";
+import { uploadToSupabaseStorage } from "@/lib/supabase";
 
 async function uploadSingleBuffer(
   buffer: Buffer,
-  originalName: string
+  originalName: string,
+  mimeType: string
 ): Promise<string> {
-  // 1. If Cloudinary credentials are provided in .env, upload to Cloudinary
+  // 1. Prioritaskan Supabase Storage jika URL & KEY sudah diisi
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+    try {
+      const url = await uploadToSupabaseStorage(buffer, originalName, mimeType);
+      return url;
+    } catch (err) {
+      console.warn("Supabase storage upload failed, falling back to secondary providers...", err);
+    }
+  }
+
+  // 2. Fallback ke Cloudinary jika credentials tersedia
   if (
     process.env.CLOUDINARY_CLOUD_NAME &&
     process.env.CLOUDINARY_API_KEY &&
@@ -27,7 +39,7 @@ async function uploadSingleBuffer(
     const secureUrl = await new Promise<string>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: "rimbagear",
+          folder: "outdoor",
           public_id: `${Date.now()}-${cleanFileName || "image"}`,
           resource_type: "image",
           format: "webp",
@@ -50,7 +62,7 @@ async function uploadSingleBuffer(
     return secureUrl;
   }
 
-  // 2. Fallback to local storage (/public/uploads)
+  // 3. Fallback ke local storage (/public/uploads)
   const ext = path.extname(originalName) || ".jpg";
   const cleanBase = path
     .basename(originalName, ext)
@@ -85,7 +97,7 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const url = await uploadSingleBuffer(buffer, file.name);
+      const url = await uploadSingleBuffer(buffer, file.name, file.type || "image/webp");
       uploadedUrls.push(url);
     }
 
@@ -101,4 +113,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

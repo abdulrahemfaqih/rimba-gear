@@ -2,31 +2,13 @@ import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getDb, initDb } from "@/lib/db";
+import { getCategories } from "@/lib/db";
 import { ArrowRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function CategoriesPage() {
-  await initDb();
-  const db = getDb();
-
-  const categoriesRes = await db.execute(`
-    SELECT c.*, COUNT(p.id) as product_count
-    FROM categories c
-    LEFT JOIN products p ON p.category_id = c.id AND p.is_active = 1
-    WHERE c.is_active = 1
-    GROUP BY c.id
-    ORDER BY c.sort_order ASC, c.name ASC
-  `);
-
-  const categories = categoriesRes.rows.map((row) => ({
-    id: String(row.id),
-    name: String(row.name),
-    slug: String(row.slug),
-    imageUrl: String(row.image_url),
-    productCount: Number(row.product_count || 0),
-  }));
+  const categories = await getCategories({ includeInactive: false });
 
   return (
     <>

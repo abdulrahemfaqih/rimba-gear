@@ -1,33 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, initDb } from "@/lib/db";
+import { verifyAdminCredentials } from "@/lib/db";
 
-const DEFAULT_USER = process.env.ADMIN_USERNAME || "admin";
-const DEFAULT_PASS = process.env.ADMIN_PASSWORD || "rimbagear2026";
 const COOKIE_NAME = "rimbagear_admin_session";
 
 export async function POST(req: NextRequest) {
   try {
-    await initDb();
-    const db = getDb();
     const { username, password } = await req.json();
 
-    // Check credentials against database admins table
-    const adminRes = await db.execute({
-      sql: `SELECT * FROM admins WHERE username = ? AND password = ? LIMIT 1`,
-      args: [username, password],
-    });
+    const admin = await verifyAdminCredentials(username, password);
 
-    const isMatch =
-      adminRes.rows.length > 0 ||
-      (username === DEFAULT_USER && password === DEFAULT_PASS);
-
-    if (isMatch) {
-      const admin = adminRes.rows[0];
+    if (admin) {
       const response = NextResponse.json({
         success: true,
         user: {
-          username: admin?.username || username,
-          name: admin?.name || "Administrator Your Brand",
+          username: admin.username || username,
+          name: admin.name || "Administrator Outdoor",
         },
       });
 
@@ -43,9 +30,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: "Username atau password salah" }, { status: 401 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Admin auth error:", error);
-    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Login failed" }, { status: 500 });
   }
 }
 

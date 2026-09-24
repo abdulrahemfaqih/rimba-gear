@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, initDb } from "@/lib/db";
+import { updateOrderStatus, deleteOrder } from "@/lib/db";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await initDb();
     const { id } = await params;
-    const db = getDb();
     const body = await req.json();
     const { status } = body;
 
@@ -26,16 +24,12 @@ export async function PATCH(
     }
 
     const finalStatus = status === "baru" ? "pending" : status;
-
-    await db.execute({
-      sql: `UPDATE orders SET status = ? WHERE id = ?`,
-      args: [finalStatus, id],
-    });
+    await updateOrderStatus(id, finalStatus);
 
     return NextResponse.json({ success: true, status: finalStatus });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Order PATCH error:", error);
-    return NextResponse.json({ error: "Failed to update order status" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to update order status" }, { status: 500 });
   }
 }
 
@@ -44,25 +38,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await initDb();
     const { id } = await params;
-    const db = getDb();
-
-    // Delete order items first (or cascade)
-    await db.execute({
-      sql: `DELETE FROM order_items WHERE order_id = ?`,
-      args: [id],
-    });
-
-    // Delete order
-    await db.execute({
-      sql: `DELETE FROM orders WHERE id = ?`,
-      args: [id],
-    });
-
+    await deleteOrder(id);
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Order DELETE error:", error);
-    return NextResponse.json({ error: "Failed to delete order" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to delete order" }, { status: 500 });
   }
 }

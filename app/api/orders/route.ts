@@ -1,71 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, initDb } from "@/lib/db";
+import { getOrders, createOrder } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   try {
-    await initDb();
-    const db = getDb();
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
 
-    let sql = `SELECT * FROM orders`;
-    const args: any[] = [];
-
-    if (status && status !== "semua") {
-      sql += ` WHERE status = ?`;
-      args.push(status);
-    }
-
-    sql += ` ORDER BY created_at DESC`;
-
-    const ordersResult = await db.execute({ sql, args });
-
-    // Fetch items for all orders
-    const itemsResult = await db.execute(`SELECT * FROM order_items`);
-    const itemsByOrderId: Record<string, any[]> = {};
-
-    for (const item of itemsResult.rows) {
-      const orderId = String(item.order_id);
-      if (!itemsByOrderId[orderId]) {
-        itemsByOrderId[orderId] = [];
-      }
-      itemsByOrderId[orderId].push({
-        id: String(item.id),
-        productId: String(item.product_id),
-        productName: String(item.product_name),
-        days: Number(item.days),
-        price: Number(item.price),
-        quantity: Number(item.quantity || 1),
-      });
-    }
-
-    const orders = ordersResult.rows.map((row) => ({
-      id: String(row.id),
-      customerName: String(row.customer_name),
-      phone: String(row.phone),
-      address: row.address ? String(row.address) : null,
-      idPhotoUrl: String(row.id_photo_url),
-      totalPrice: Number(row.total_price),
-      startDate: row.start_date ? String(row.start_date) : null,
-      endDate: row.end_date ? String(row.end_date) : null,
-      dpPercentage: Number(row.dp_percentage ?? 30),
-      dpAmount: Number(row.dp_amount ?? 0),
-      status: String(row.status === "baru" ? "pending" : row.status),
-      createdAt: String(row.created_at),
-      items: itemsByOrderId[String(row.id)] || [],
-    }));
-
+    const orders = await getOrders({ status });
     return NextResponse.json({ orders });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Orders GET error:", error);
-    return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to fetch orders" }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    await initDb();
-    const db = getDb();
     const body = await req.json();
     const {
       customerName,
@@ -84,51 +34,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const now = new Date();
-    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const orderId = `RMB-${dateStr}-${randomSuffix}`;
-    const createdAt = now.toISOString();
+    const orderItems = items.map((it: any) => ({
+      productId: it.productId || null,
+      productName: it.name || it.productName,
+      days: Number(it.days || it.selectedDays || 1),
+      price: Number(it.price || it.selectedPrice || 0),
+      quantity: Number(it.quantity || 1),
+    }));
 
-    await db.execute({
-      sql: `INSERT INTO orders (id, customer_name, phone, address, id_photo_url, total_price, start_date, end_date, dp_percentage, dp_amount, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
-      args: [
-        orderId,
+    const { orderId } = await createOrder(
+      {
         customerName,
         phone,
-        address || null,
+        address,
         idPhotoUrl,
-        totalPrice,
-        startDate || null,
-        endDate || null,
-        Number(dpPercentage),
-        Number(dpAmount),
-        createdAt,
-      ],
-    });
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const itemId = `item-${orderId}-${i + 1}`;
-      await db.execute({
-        sql: `INSERT INTO order_items (id, order_id, product_id, product_name, days, price, quantity)
-              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        args: [
-          itemId,
-          orderId,
-          item.productId || null,
-          item.name || item.productName,
-          Number(item.days || item.selectedDays),
-          Number(item.price || item.selectedPrice),
-          Number(item.quantity || 1),
-        ],
-      });
-    }
+        totalPrice: Number(totalPrice),
+        startDate,
+        endDate,
+        dpPercentage: Number(dpPercentage),
+        dpAmount: Number(dpAmount),
+      },
+      orderItems
+    );
 
     return NextResponse.json({ success: true, orderId });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Orders POST error:", error);
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to create order" }, { status: 500 });
   }
 }
